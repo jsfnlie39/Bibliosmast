@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Libros</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="barra">
+        <a href="menu.html">← Menú principal</a>
+        <div class="usuario">
+            <span id="usuarioActual"></span>
+            <button id="btnSalir" class="btn secundario chico" type="button">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <main class="contenedor">
+        <h1>Libros</h1>
+        <div id="mensaje" class="mensaje" hidden role="status"></div>
+
+        <div class="herramientas">
+            <input id="busqueda" type="search" placeholder="Buscar por título o ISBN...">
+            <button id="btnNuevo" class="btn" type="button">+ Nuevo libro</button>
+        </div>
+
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ISBN</th><th>Título</th><th>Autor(es)</th>
+                        <th>Categoría</th><th>Editorial</th><th>Año</th><th>Disponibles</th><th></th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyLibros"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <dialog id="dlgLibro">
+        <h2 id="tituloDialogo">Nuevo libro</h2>
+        <div id="mensajeForm" class="mensaje error" hidden role="alert"></div>
+        <form id="frmLibro" novalidate>
+            <div class="fila">
+                <div class="campo">
+                    <label for="isbn">ISBN *</label>
+                    <input id="isbn" type="text" maxlength="20" required>
+                </div>
+                <div class="campo">
+                    <label for="anioPublicacion">Año de publicación</label>
+                    <input id="anioPublicacion" type="number" min="1000" max="2100">
+                </div>
+            </div>
+            <div class="campo">
+                <label for="titulo">Título *</label>
+                <input id="titulo" type="text" maxlength="200" required>
+            </div>
+            <div class="fila">
+                <div class="campo">
+                    <label for="idCategoria">Categoría *</label>
+                    <select id="idCategoria" required></select>
+                </div>
+                <div class="campo">
+                    <label for="idEditorial">Editorial *</label>
+                    <select id="idEditorial" required></select>
+                </div>
+            </div>
+            <div class="campo">
+                <label for="idsAutores">Autor(es) * <small>(Ctrl/Cmd + clic para varios)</small></label>
+                <select id="idsAutores" multiple required></select>
+            </div>
+            <div class="fila">
+                <div class="campo">
+                    <label for="edicion">Edición</label>
+                    <input id="edicion" type="text" maxlength="30">
+                </div>
+                <div class="campo">
+                    <label for="idioma">Idioma</label>
+                    <input id="idioma" type="text" maxlength="30" placeholder="Español">
+                </div>
+            </div>
+            <div class="campo">
+                <label for="numeroPaginas">Número de páginas</label>
+                <input id="numeroPaginas" type="number" min="1">
+            </div>
+            <div class="campo">
+                <label for="descripcion">Descripción</label>
+                <textarea id="descripcion" rows="3"></textarea>
+            </div>
+            <div class="dialogo-botones">
+                <button id="btnCancelar" class="btn secundario" type="button">Cancelar</button>
+                <button id="btnGuardar" class="btn" type="submit">Guardar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script type="module" src="js/libros.js"></script>
+</body>
+</html>

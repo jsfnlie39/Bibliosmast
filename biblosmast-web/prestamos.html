@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Préstamos</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="barra">
+        <a href="menu.html">← Menú principal</a>
+        <div class="usuario">
+            <span id="usuarioActual"></span>
+            <button id="btnSalir" class="btn secundario chico" type="button">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <main class="contenedor">
+        <h1>Préstamos y devoluciones</h1>
+        <div id="mensaje" class="mensaje" hidden role="status"></div>
+
+        <div class="herramientas">
+            <select id="filtroUsuario" aria-label="Filtrar por usuario"></select>
+            <select id="filtroEstado" aria-label="Filtrar por estado">
+                <option value="">Todos</option>
+                <option value="ACTIVO">Activos</option>
+                <option value="VENCIDO">Vencidos</option>
+                <option value="FINALIZADO">Finalizados</option>
+            </select>
+            <button id="btnNuevo" class="btn" type="button">+ Nuevo préstamo</button>
+        </div>
+
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>N°</th><th>Usuario</th><th>Fecha préstamo</th>
+                        <th>Fecha límite</th><th>Estado</th><th>Ejemplares</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyPrestamos"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <dialog id="dlgPrestamo">
+        <h2>Nuevo préstamo</h2>
+        <div id="mensajeForm" class="mensaje error" hidden role="alert"></div>
+        <form id="frmPrestamo" novalidate>
+            <div class="campo">
+                <label for="idUsuario">Usuario que recibe el préstamo *</label>
+                <select id="idUsuario" required></select>
+            </div>
+            <div class="campo">
+                <label for="idsEjemplares">Ejemplares disponibles * <small>(máximo 5; Ctrl/Cmd + clic para varios)</small></label>
+                <select id="idsEjemplares" multiple required></select>
+            </div>
+            <div class="campo">
+                <label for="fechaLimite">Fecha límite de devolución *</label>
+                <input id="fechaLimite" type="date" required>
+            </div>
+            <div class="campo">
+                <label for="observaciones">Observaciones</label>
+                <textarea id="observaciones" rows="2" maxlength="255"></textarea>
+            </div>
+            <div class="dialogo-botones">
+                <button id="btnCancelar" class="btn secundario" type="button">Cancelar</button>
+                <button id="btnGuardar" class="btn" type="submit">Registrar préstamo</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script type="module" src="js/prestamos.js"></script>
+</body>
+</html>

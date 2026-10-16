@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Usuarios</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="barra">
+        <a href="menu.html">← Menú principal</a>
+        <div class="usuario">
+            <span id="usuarioActual"></span>
+            <button id="btnSalir" class="btn secundario chico" type="button">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <main class="contenedor">
+        <h1>Usuarios y roles</h1>
+        <div id="mensaje" class="mensaje" hidden role="status"></div>
+
+        <div class="herramientas">
+            <input id="busqueda" type="search" placeholder="Buscar por nombre, documento, correo o usuario...">
+            <button id="btnNuevo" class="btn" type="button">+ Nuevo usuario</button>
+        </div>
+
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Documento</th><th>Nombre</th><th>Correo</th>
+                        <th>Usuario</th><th>Rol</th><th>Estado</th><th></th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyUsuarios"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <dialog id="dlgUsuario">
+        <h2 id="tituloDialogo">Nuevo usuario</h2>
+        <div id="mensajeForm" class="mensaje error" hidden role="alert"></div>
+        <form id="frmUsuario" novalidate>
+            <div class="fila">
+                <div class="campo">
+                    <label for="documento">Documento *</label>
+                    <input id="documento" type="text" maxlength="20" required>
+                </div>
+                <div class="campo">
+                    <label for="estado">Estado *</label>
+                    <select id="estado" required>
+                        <option value="ACTIVO">Activo</option>
+                        <option value="INACTIVO">Inactivo</option>
+                        <option value="SANCIONADO">Sancionado</option>
+                    </select>
+                </div>
+            </div>
+            <div class="fila">
+                <div class="campo">
+                    <label for="nombres">Nombres *</label>
+                    <input id="nombres" type="text" maxlength="80" required>
+                </div>
+                <div class="campo">
+                    <label for="apellidos">Apellidos *</label>
+                    <input id="apellidos" type="text" maxlength="80" required>
+                </div>
+            </div>
+            <div class="fila">
+                <div class="campo">
+                    <label for="email">Correo *</label>
+                    <input id="email" type="email" maxlength="120" required>
+                </div>
+                <div class="campo">
+                    <label for="telefono">Teléfono</label>
+                    <input id="telefono" type="text" maxlength="20">
+                </div>
+            </div>
+
+            <h3>Cuenta de acceso</h3>
+            <div class="fila">
+                <div class="campo">
+                    <label for="username">Nombre de usuario *</label>
+                    <input id="username" type="text" minlength="4" maxlength="40" autocomplete="off" required>
+                </div>
+                <div class="campo">
+                    <label for="idRol">Rol *</label>
+                    <select id="idRol" required></select>
+                </div>
+            </div>
+            <div class="campo">
+                <label for="password">Contraseña <span id="notaPassword">*</span></label>
+                <input id="password" type="password" minlength="8" maxlength="72" autocomplete="new-password">
+                <p class="nota" id="ayudaPassword">Mínimo 8 caracteres.</p>
+            </div>
+            <div class="campo">
+                <label><input id="activo" type="checkbox" checked> Cuenta activa (puede iniciar sesión)</label>
+            </div>
+
+            <div class="dialogo-botones">
+                <button id="btnCancelar" class="btn secundario" type="button">Cancelar</button>
+                <button id="btnGuardar" class="btn" type="submit">Guardar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script type="module" src="js/usuarios.js"></script>
+</body>
+</html>

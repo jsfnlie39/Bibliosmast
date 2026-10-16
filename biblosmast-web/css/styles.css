@@ -1,0 +1,112 @@
+:root {
+    --azul: #1f4e79;
+    --azul-claro: #e8f0f8;
+    --texto: #1d2733;
+    --borde: #d5dde6;
+    --error: #b3261e;
+    --ok: #1e7b43;
+    --fondo: #f4f6f9;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--texto);
+    background: var(--fondo);
+}
+h1, h2 { margin: 0 0 .5rem; }
+button, input, select, textarea { font: inherit; }
+
+/* ---------- login ---------- */
+.login-pagina { min-height: 100vh; display: grid; place-items: center; padding: 1rem; }
+.tarjeta {
+    background: #fff; border: 1px solid var(--borde); border-radius: 12px;
+    padding: 2rem; width: 100%; max-width: 380px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .06);
+}
+.tarjeta h1 { color: var(--azul); text-align: center; }
+.tarjeta .sub { text-align: center; color: #5a6877; margin-bottom: 1.25rem; }
+
+/* ---------- formularios ---------- */
+.campo { display: flex; flex-direction: column; gap: .25rem; margin-bottom: .9rem; }
+.campo label { font-size: .85rem; font-weight: 600; }
+.campo input, .campo select, .campo textarea {
+    padding: .55rem .65rem; border: 1px solid var(--borde); border-radius: 8px; background: #fff;
+}
+.campo input:focus, .campo select:focus, .campo textarea:focus {
+    outline: 2px solid var(--azul-claro); border-color: var(--azul);
+}
+.fila { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
+
+.btn {
+    border: 0; border-radius: 8px; padding: .6rem 1rem; cursor: pointer;
+    background: var(--azul); color: #fff; font-weight: 600;
+}
+.btn:hover { filter: brightness(1.1); }
+.btn:disabled { opacity: .6; cursor: wait; }
+.btn.secundario { background: #fff; color: var(--azul); border: 1px solid var(--azul); }
+.btn.peligro { background: var(--error); }
+.btn.chico { padding: .3rem .6rem; font-size: .85rem; }
+.btn.bloque { width: 100%; }
+
+.mensaje { padding: .6rem .8rem; border-radius: 8px; margin-bottom: .9rem; font-size: .9rem; }
+.mensaje.error { background: #fdecea; color: var(--error); }
+.mensaje.ok { background: #e6f4ea; color: var(--ok); }
+
+/* ---------- layout interno ---------- */
+.barra {
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    background: var(--azul); color: #fff; padding: .75rem 1.25rem;
+}
+.barra a { color: #fff; text-decoration: none; font-weight: 600; }
+.barra .usuario { display: flex; align-items: center; gap: .75rem; font-size: .9rem; }
+.contenedor { max-width: 1100px; margin: 1.5rem auto; padding: 0 1rem; }
+
+/* ---------- menu ---------- */
+.modulos { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem; }
+.modulo {
+    display: block; background: #fff; border: 1px solid var(--borde); border-radius: 12px;
+    padding: 1.25rem; text-decoration: none; color: inherit;
+}
+.modulo:hover:not(.deshabilitado) { border-color: var(--azul); box-shadow: 0 4px 12px rgba(0, 0, 0, .08); }
+.modulo h2 { color: var(--azul); font-size: 1.1rem; }
+.modulo p { margin: 0; color: #5a6877; font-size: .9rem; }
+.modulo.deshabilitado { opacity: .55; cursor: not-allowed; }
+
+/* ---------- tabla ---------- */
+.herramientas { display: flex; gap: .75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.herramientas input { flex: 1; min-width: 200px; padding: .55rem .65rem; border: 1px solid var(--borde); border-radius: 8px; }
+.tabla-wrap { overflow-x: auto; background: #fff; border: 1px solid var(--borde); border-radius: 12px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: .65rem .8rem; border-bottom: 1px solid var(--borde); font-size: .9rem; }
+th { background: var(--azul-claro); color: var(--azul); }
+tr:last-child td { border-bottom: 0; }
+.acciones { display: flex; gap: .4rem; white-space: nowrap; }
+.vacio { padding: 1.5rem; text-align: center; color: #5a6877; }
+
+/* ---------- dialogo ---------- */
+dialog { border: 0; border-radius: 12px; padding: 1.5rem; width: min(640px, 94vw); box-shadow: 0 10px 40px rgba(0, 0, 0, .25); }
+dialog::backdrop { background: rgba(0, 0, 0, .4); }
+.dialogo-botones { display: flex; justify-content: flex-end; gap: .6rem; margin-top: 1rem; }
+select[multiple] { min-height: 90px; }
+@media (max-width: 560px) { .fila { grid-template-columns: 1fr; } }
+
+/* ---------- prestamos ---------- */
+.etiqueta { display: inline-block; padding: .15rem .55rem; border-radius: 999px; font-size: .78rem; font-weight: 700; }
+.etiqueta.activo { background: #e6f4ea; color: var(--ok); }
+.etiqueta.vencido { background: #fdecea; color: var(--error); }
+.etiqueta.finalizado { background: #eceff3; color: #5a6877; }
+.detalle-item { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; padding: .2rem 0; }
+.detalle-item + .detalle-item { border-top: 1px dashed var(--borde); }
+.detalle-item select { padding: .25rem .4rem; border: 1px solid var(--borde); border-radius: 6px; }
+.herramientas select { padding: .55rem .65rem; border: 1px solid var(--borde); border-radius: 8px; background: #fff; }
+.nota { font-size: .8rem; color: #5a6877; margin: .25rem 0 0; }
+
+dialog h3 { margin: .5rem 0 .75rem; font-size: 1rem; color: var(--azul); }
+.campo label input[type="checkbox"] { margin-right: .4rem; }
+
+/* ---------- pestañas ---------- */
+.pestanas { display: flex; gap: .25rem; border-bottom: 2px solid var(--borde); margin-bottom: 1rem; flex-wrap: wrap; }
+.pestana { border: 0; background: transparent; padding: .6rem 1rem; cursor: pointer; font-weight: 600; color: #5a6877; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+.pestana:hover { color: var(--azul); }
+.pestana.activa { color: var(--azul); border-bottom-color: var(--azul); }

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Ejemplares</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="barra">
+        <a href="menu.html">← Menú principal</a>
+        <div class="usuario">
+            <span id="usuarioActual"></span>
+            <button id="btnSalir" class="btn secundario chico" type="button">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <main class="contenedor">
+        <h1>Ejemplares</h1>
+        <p class="nota">Cada ejemplar es una copia física de un libro. Un libro solo se puede prestar si tiene ejemplares disponibles.</p>
+        <div id="mensaje" class="mensaje" hidden role="status"></div>
+
+        <div class="herramientas">
+            <select id="filtroLibro" aria-label="Filtrar por libro"></select>
+            <button id="btnNuevo" class="btn" type="button">+ Nuevo ejemplar</button>
+        </div>
+
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th><th>Libro</th><th>Ubicación</th>
+                        <th>Estado</th><th>Ingreso</th><th></th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyEjemplares"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <dialog id="dlgEjemplar">
+        <h2 id="tituloDialogo">Nuevo ejemplar</h2>
+        <div id="mensajeForm" class="mensaje error" hidden role="alert"></div>
+        <form id="frmEjemplar" novalidate>
+            <div class="campo">
+                <label for="idLibro">Libro *</label>
+                <select id="idLibro" required></select>
+            </div>
+            <div class="fila">
+                <div class="campo">
+                    <label for="codigo">Código *</label>
+                    <input id="codigo" type="text" maxlength="30" required placeholder="LIB-0001-C">
+                </div>
+                <div class="campo">
+                    <label for="ubicacion">Ubicación</label>
+                    <input id="ubicacion" type="text" maxlength="60" placeholder="Estante A1">
+                </div>
+            </div>
+            <div class="campo">
+                <label for="estado">Estado</label>
+                <select id="estado">
+                    <option value="DISPONIBLE">Disponible</option>
+                    <option value="RESERVADO">Reservado</option>
+                    <option value="DANADO">Dañado</option>
+                    <option value="PERDIDO">Perdido</option>
+                </select>
+                <p class="nota">El estado «Prestado» lo asigna solo el módulo de préstamos.</p>
+            </div>
+            <div class="dialogo-botones">
+                <button id="btnCancelar" class="btn secundario" type="button">Cancelar</button>
+                <button id="btnGuardar" class="btn" type="submit">Guardar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script type="module" src="js/ejemplares.js"></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Reservas</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="barra">
+        <a href="menu.html">← Menú principal</a>
+        <div class="usuario">
+            <span id="usuarioActual"></span>
+            <button id="btnSalir" class="btn secundario chico" type="button">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <main class="contenedor">
+        <h1>Reservas</h1>
+        <p class="nota">Una reserva aparta un libro para un usuario hasta la fecha de vencimiento. Cuando haya un ejemplar disponible, se atiende registrando el préstamo: la reserva del usuario para ese libro pasa sola a Atendida.</p>
+        <div id="mensaje" class="mensaje" hidden role="status"></div>
+
+        <div class="herramientas">
+            <select id="filtroEstado" aria-label="Filtrar por estado">
+                <option value="">Todos los estados</option>
+                <option value="PENDIENTE">Pendientes</option>
+                <option value="VENCIDA">Vencidas</option>
+                <option value="ATENDIDA">Atendidas</option>
+                <option value="CANCELADA">Canceladas</option>
+            </select>
+            <button id="btnNueva" class="btn" type="button">+ Nueva reserva</button>
+        </div>
+
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Usuario</th><th>Libro</th><th>Reservada</th><th>Vence</th>
+                        <th>Estado</th><th>Ejemplares disponibles</th><th></th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyReservas"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <dialog id="dlgReserva">
+        <h2 id="tituloDialogo">Nueva reserva</h2>
+        <div id="mensajeForm" class="mensaje error" hidden role="alert"></div>
+        <form id="frmReserva" novalidate>
+            <div class="campo">
+                <label for="idUsuario">Usuario *</label>
+                <select id="idUsuario" required></select>
+            </div>
+            <div class="campo">
+                <label for="idLibro">Libro *</label>
+                <select id="idLibro" required></select>
+            </div>
+            <div class="campo">
+                <label for="fechaVencimiento">Vence el *</label>
+                <input id="fechaVencimiento" type="date" required>
+            </div>
+            <div id="grupoEstado" hidden>
+                <div class="campo">
+                    <label for="estado">Estado</label>
+                    <select id="estado">
+                        <option value="PENDIENTE">Pendiente</option>
+                        <option value="ATENDIDA">Atendida</option>
+                        <option value="CANCELADA">Cancelada</option>
+                    </select>
+                    <p class="nota">«Vencida» se calcula sola cuando pasa la fecha de vencimiento. Una reserva atendida o cancelada ya no se edita.</p>
+                </div>
+            </div>
+            <div class="dialogo-botones">
+                <button id="btnCancelar" class="btn secundario" type="button">Cancelar</button>
+                <button id="btnGuardar" class="btn" type="submit">Guardar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script type="module" src="js/reservas.js"></script>
+</body>
+</html>

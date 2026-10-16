@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Menú principal</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="barra">
+        <a href="menu.html">Biblosmast</a>
+        <div class="usuario">
+            <span id="usuarioActual"></span>
+            <button id="btnSalir" class="btn secundario chico" type="button">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <main class="contenedor">
+        <h1>Menú principal</h1>
+        <p>Selecciona un módulo.</p>
+
+        <section class="modulos">
+            <a class="modulo" href="libros.html">
+                <h2>Libros</h2>
+                <p>Catálogo: registrar, consultar, editar y eliminar libros.</p>
+            </a>
+            <a id="modCatalogos" class="modulo" href="catalogos.html">
+                <h2>Autores, categorías y editoriales</h2>
+                <p>Datos de apoyo para registrar libros.</p>
+            </a>
+            <a id="modEjemplares" class="modulo" href="ejemplares.html">
+                <h2>Ejemplares</h2>
+                <p>Copias físicas de cada libro: registrar, editar y dar de baja.</p>
+            </a>
+            <a id="modPrestamos" class="modulo" href="prestamos.html">
+                <h2>Préstamos</h2>
+                <p>Registrar préstamos y devoluciones de ejemplares.</p>
+            </a>
+            <a id="modReservas" class="modulo" href="reservas.html">
+                <h2>Reservas</h2>
+                <p>Apartar un libro para un usuario hasta una fecha; atender o cancelar la reserva.</p>
+            </a>
+            <a id="modUsuarios" class="modulo" href="usuarios.html">
+                <h2>Usuarios</h2>
+                <p>Registrar usuarios, asignar roles y administrar cuentas.</p>
+            </a>
+        </section>
+    </main>
+    <script type="module" src="js/menu.js"></script>
+</body>
+</html>

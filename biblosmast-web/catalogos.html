@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Autores, categorías y editoriales</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="barra">
+        <a href="menu.html">← Menú principal</a>
+        <div class="usuario">
+            <span id="usuarioActual"></span>
+            <button id="btnSalir" class="btn secundario chico" type="button">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <main class="contenedor">
+        <h1>Autores, categorías y editoriales</h1>
+        <p class="nota">Estos datos alimentan las listas del formulario de libros.</p>
+        <div id="mensaje" class="mensaje" hidden role="status"></div>
+
+        <div class="pestanas" id="pestanas" role="tablist"></div>
+
+        <div class="herramientas">
+            <button id="btnNuevo" class="btn" type="button">+ Nuevo</button>
+        </div>
+
+        <div class="tabla-wrap">
+            <table>
+                <thead><tr id="encabezado"></tr></thead>
+                <tbody id="cuerpo"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <dialog id="dlgItem">
+        <h2 id="tituloDialogo"></h2>
+        <div id="mensajeForm" class="mensaje error" hidden role="alert"></div>
+        <form id="frmItem" novalidate>
+            <div id="camposForm"></div>
+            <div class="dialogo-botones">
+                <button id="btnCancelar" class="btn secundario" type="button">Cancelar</button>
+                <button id="btnGuardar" class="btn" type="submit">Guardar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script type="module" src="js/catalogos.js"></script>
+</body>
+</html>
