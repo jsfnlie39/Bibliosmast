@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Inicio</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-pagina="inicio">
+    <main class="contenedor">
+        <div class="encabezado-pagina">
+            <h1>Inicio</h1>
+            <p>Resumen de la biblioteca y accesos a los módulos.</p>
+        </div>
+
+        <section class="kpis" id="kpis" aria-label="Indicadores"></section>
+
+        <section class="graficos" aria-label="Gráficos">
+            <article class="grafico-tarjeta">
+                <h2>Ejemplares por estado</h2>
+                <div class="grafico-caja"><canvas id="grafEjemplares" role="img" aria-label="Gráfico de ejemplares por estado"></canvas></div>
+            </article>
+            <article class="grafico-tarjeta">
+                <h2>Préstamos por estado</h2>
+                <div class="grafico-caja"><canvas id="grafPrestamos" role="img" aria-label="Gráfico de préstamos por estado"></canvas></div>
+            </article>
+            <article class="grafico-tarjeta">
+                <h2>Libros por categoría</h2>
+                <div class="grafico-caja"><canvas id="grafCategorias" role="img" aria-label="Gráfico de libros por categoría"></canvas></div>
+            </article>
+            <article class="grafico-tarjeta">
+                <h2>Préstamos de los últimos 14 días</h2>
+                <div class="grafico-caja"><canvas id="grafActividad" role="img" aria-label="Gráfico de préstamos por día"></canvas></div>
+            </article>
+        </section>
+
+        <h2 class="seccion-titulo">Módulos</h2>
+        <section class="modulos">
+            <a class="modulo" href="libros.html">
+                <h2>Libros</h2>
+                <p>Catálogo: registrar, consultar, editar y eliminar libros.</p>
+            </a>
+            <a id="modCatalogos" class="modulo" href="catalogos.html">
+                <h2>Autores, categorías y editoriales</h2>
+                <p>Datos de apoyo para registrar libros.</p>
+            </a>
+            <a id="modEjemplares" class="modulo" href="ejemplares.html">
+                <h2>Ejemplares</h2>
+                <p>Copias físicas de cada libro: registrar, editar y dar de baja.</p>
+            </a>
+            <a id="modPrestamos" class="modulo" href="prestamos.html">
+                <h2>Préstamos</h2>
+                <p>Registrar préstamos y devoluciones de ejemplares.</p>
+            </a>
+            <a id="modReservas" class="modulo" href="reservas.html">
+                <h2>Reservas</h2>
+                <p>Apartar un libro para un usuario hasta una fecha; atender o cancelar la reserva.</p>
+            </a>
+            <a id="modMultas" class="modulo" href="multas.html">
+                <h2>Multas</h2>
+                <p>Multas por retraso, daño o pérdida: registrar pagos y ajustar los valores.</p>
+            </a>
+            <a id="modAuditoria" class="modulo" href="auditoria.html">
+                <h2>Auditoría</h2>
+                <p>Quién inició sesión y qué cambios se hicieron en el sistema.</p>
+            </a>
+            <a id="modUsuarios" class="modulo" href="usuarios.html">
+                <h2>Usuarios</h2>
+                <p>Registrar usuarios, asignar roles y administrar cuentas.</p>
+            </a>
+        </section>
+
+        <section class="panel">
+            <h2>Tu token JWT</h2>
+            <p id="tokenVigencia"></p>
+            <details>
+                <summary>¿Qué contiene mi token?</summary>
+                <p class="nota">Un JWT tiene tres partes separadas por puntos: encabezado, contenido (payload) y firma. El navegador solo lee las dos primeras; la firma la verifica el servidor.</p>
+                <h3>Encabezado</h3>
+                <pre class="token" id="tokenHeader"></pre>
+                <h3>Contenido (payload)</h3>
+                <pre class="token" id="tokenPayload"></pre>
+                <h3>Token completo</h3>
+                <pre class="token" id="tokenTexto"></pre>
+            </details>
+        </section>
+    </main>
+    <script type="module" src="js/menu.js"></script>
+</body>
+</html>

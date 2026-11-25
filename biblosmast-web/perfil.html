@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Mi perfil</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-pagina="perfil">
+    <main class="contenedor">
+        <div class="encabezado-pagina">
+            <h1>Mi perfil</h1>
+            <p>Tus datos de contacto y tu contraseña.</p>
+        </div>
+
+        <div id="avisoClave" class="mensaje error" role="alert" hidden>
+            Tienes una contraseña temporal. Debes cambiarla para poder usar el sistema.
+        </div>
+        <div id="mensaje" class="mensaje" hidden role="status"></div>
+
+        <div class="perfil-grid">
+            <section class="panel">
+                <h2>Mis datos</h2>
+                <dl class="datos">
+                    <dt>Usuario</dt><dd id="datoUsuario">—</dd>
+                    <dt>Rol</dt><dd id="datoRol">—</dd>
+                    <dt>Documento</dt><dd id="datoDocumento">—</dd>
+                    <dt>Nombre</dt><dd id="datoNombre">—</dd>
+                </dl>
+                <p class="nota">El nombre, el documento y el rol los cambia el administrador.</p>
+                <form id="frmPerfil" novalidate>
+                    <div class="campo">
+                        <label for="email">Correo</label>
+                        <input id="email" type="email" maxlength="120" required>
+                    </div>
+                    <div class="campo">
+                        <label for="telefono">Teléfono</label>
+                        <input id="telefono" type="text" maxlength="20">
+                    </div>
+                    <button id="btnGuardarPerfil" class="btn" type="submit">Guardar cambios</button>
+                </form>
+            </section>
+
+            <section class="panel">
+                <h2>Cambiar contraseña</h2>
+                <form id="frmClave" novalidate>
+                    <div class="campo">
+                        <label for="claveActual">Contraseña actual</label>
+                        <input id="claveActual" type="password" maxlength="72" autocomplete="current-password" required>
+                    </div>
+                    <div class="campo">
+                        <label for="claveNueva">Nueva contraseña</label>
+                        <input id="claveNueva" type="password" minlength="8" maxlength="72" autocomplete="new-password" required>
+                        <p class="nota">Mínimo 8 caracteres y distinta de la actual.</p>
+                    </div>
+                    <div class="campo">
+                        <label for="claveConfirmar">Repite la nueva contraseña</label>
+                        <input id="claveConfirmar" type="password" maxlength="72" autocomplete="new-password" required>
+                    </div>
+                    <p class="nota">Al cambiarla, se cierran las sesiones abiertas en otros lugares.</p>
+                    <button id="btnCambiarClave" class="btn" type="submit">Cambiar contraseña</button>
+                </form>
+            </section>
+        </div>
+    </main>
+    <script type="module" src="js/perfil.js"></script>
+</body>
+</html>

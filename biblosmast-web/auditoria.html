@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Auditoría</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-pagina="auditoria">
+    <main class="contenedor">
+        <h1>Auditoría</h1>
+        <p class="nota">Registro de inicios de sesión (correctos y fallidos) y de cada cambio aceptado por el sistema. Por defecto se muestran los últimos 7 días.</p>
+        <div id="mensaje" class="mensaje" hidden role="status"></div>
+
+        <form id="frmFiltros" class="filtros" novalidate>
+            <div class="campo">
+                <label for="filtroDesde">Desde</label>
+                <input id="filtroDesde" type="date">
+            </div>
+            <div class="campo">
+                <label for="filtroHasta">Hasta</label>
+                <input id="filtroHasta" type="date">
+            </div>
+            <div class="campo">
+                <label for="filtroAccion">Acción</label>
+                <select id="filtroAccion">
+                    <option value="">Todas</option>
+                    <option value="LOGIN">Inicio de sesión</option>
+                    <option value="LOGIN_FALLIDO">Inicio de sesión fallido</option>
+                    <option value="LOGIN_BLOQUEADO">Cuenta bloqueada</option>
+                    <option value="LOGOUT">Cierre de sesión</option>
+                    <option value="CLAVE_CAMBIADA">Contraseña cambiada</option>
+                    <option value="CLAVE_RESTABLECIDA">Contraseña restablecida</option>
+                    <option value="CREAR">Crear</option>
+                    <option value="ACTUALIZAR">Actualizar</option>
+                    <option value="ELIMINAR">Eliminar</option>
+                    <option value="DEVOLUCION">Devolución</option>
+                </select>
+            </div>
+            <div class="campo">
+                <label for="filtroUsuario">Usuario</label>
+                <select id="filtroUsuario"></select>
+            </div>
+            <div class="campo">
+                <label>&nbsp;</label>
+                <button id="btnBuscar" class="btn" type="submit">Buscar</button>
+            </div>
+        </form>
+
+        <p class="nota" id="resumen"></p>
+
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th><th>Usuario</th><th>Acción</th>
+                        <th>Tabla</th><th>Registro</th><th>Detalle</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyAuditoria"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script type="module" src="js/auditoria.js"></script>
+</body>
+</html>
