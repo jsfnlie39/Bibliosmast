@@ -56,6 +56,7 @@ public class PrestamoService implements IPrestamoService {
     private final ReservaRepository reservaRepository;
     private final MultaRepository multaRepository;
     private final IConfiguracionService configuracionService;
+    private final IColaReservasService colaReservas;
 
     @Override
     @Transactional(readOnly = true)
@@ -77,6 +78,7 @@ public class PrestamoService implements IPrestamoService {
     @Override
     @Transactional
     public PrestamoResponse crear(PrestamoRequest r) {
+        colaReservas.vencerListas(); // libera los ejemplares apartados que nadie recogió a tiempo
         Usuario usuario = usuarioRepository.findById(r.getIdUsuario())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "El usuario no existe"));
         if (usuario.getEstado() != EstadoUsuario.ACTIVO) {
@@ -104,8 +106,15 @@ public class PrestamoService implements IPrestamoService {
         if (ejemplares.size() != ids.size()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Alguno de los ejemplares no existe");
         }
+        // Un ejemplar apartado (RESERVADO) solo se le presta a quien lo tiene reservado y listo para recoger
+        List<Reserva> listasDelUsuario = reservaRepository.listasDeUsuario(usuario.getIdUsuario());
+        Set<Integer> apartadosParaElUsuario = listasDelUsuario.stream()
+                .map(rv -> rv.getEjemplar().getIdEjemplar())
+                .collect(Collectors.toSet());
         String noDisponibles = ejemplares.stream()
-                .filter(e -> e.getEstado() != EstadoEjemplar.DISPONIBLE)
+                .filter(e -> !(e.getEstado() == EstadoEjemplar.DISPONIBLE
+                        || (e.getEstado() == EstadoEjemplar.RESERVADO
+                                && apartadosParaElUsuario.contains(e.getIdEjemplar()))))
                 .map(Ejemplar::getCodigo)
                 .collect(Collectors.joining(", "));
         if (!noDisponibles.isEmpty()) {
@@ -134,7 +143,7 @@ public class PrestamoService implements IPrestamoService {
         Prestamo guardado = prestamoRepository.saveAndFlush(prestamo);
 
         // Si el usuario tenía reservado alguno de esos libros, la reserva queda atendida.
-        int atendidas = atenderReservas(usuario, ejemplares);
+        int atendidas = atenderReservas(usuario, ejemplares, listasDelUsuario);
         return aRespuesta(guardado, atendidas);
     }
 
@@ -166,7 +175,65 @@ public class PrestamoService implements IPrestamoService {
         }
 
         // Al actualizar el detalle, el trigger de la BD deja el ejemplar DISPONIBLE, DANADO o PERDIDO.
-        return aRespuesta(prestamoRepository.saveAndFlush(prestamo), 0, multas.size(), totalMultas);
+        Prestamo guardado = prestamoRepository.saveAndFlush(prestamo);
+
+        // Si el ejemplar volvió en buen estado y hay cola de reservas, se aparta para el siguiente
+        String apartadoPara = null;
+        if (r.getEstadoDevolucion() == EstadoDevolucion.BUEN_ESTADO) {
+            List<Reserva> listas = colaReservas.asignarEjemplarLibre(detalle.getEjemplar().getLibro().getIdLibro());
+            if (!listas.isEmpty()) {
+                Usuario espera = listas.get(0).getUsuario();
+                apartadoPara = espera.getNombres() + " " + espera.getApellidos();
+            }
+        }
+        return aRespuesta(guardado, 0, multas.size(), totalMultas, apartadoPara);
+    }
+
+    @Override
+    @Transactional
+    public PrestamoResponse renovar(Integer idPrestamo) {
+        Prestamo prestamo = buscarOFalla(idPrestamo);
+        LocalDate hoy = LocalDate.now();
+
+        boolean finalizado = prestamo.getEstado() == EstadoPrestamo.FINALIZADO
+                || prestamo.getDetalles().stream().allMatch(d -> d.getFechaDevolucion() != null);
+        if (finalizado) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "No se puede renovar: el préstamo ya fue devuelto");
+        }
+        if (prestamo.getFechaLimite().isBefore(hoy)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "No se puede renovar: el préstamo está vencido. Debe devolverse");
+        }
+
+        int maximo = configuracionService.valor(ConfiguracionService.CLAVE_MAX_RENOVACIONES).intValue();
+        if (prestamo.getRenovaciones() >= maximo) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "No se puede renovar: ya se usaron las " + maximo + " renovaciones permitidas");
+        }
+
+        Integer idUsuario = prestamo.getUsuario().getIdUsuario();
+        if (multaRepository.existsByUsuarioIdUsuarioAndEstado(idUsuario, EstadoMulta.PENDIENTE)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "No se puede renovar: el usuario tiene multas pendientes de pago");
+        }
+
+        // Solo cuentan los libros que siguen prestados (los ya devueltos no se renuevan)
+        Set<Integer> idsLibros = prestamo.getDetalles().stream()
+                .filter(d -> d.getFechaDevolucion() == null)
+                .map(d -> d.getEjemplar().getLibro().getIdLibro())
+                .collect(Collectors.toSet());
+        if (reservaRepository.contarPendientesDeOtros(idUsuario, idsLibros, hoy) > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "No se puede renovar: otra persona tiene reservado alguno de estos libros");
+        }
+
+        // La nueva fecha parte de la mayor entre la actual y hoy, y suma los días de préstamo
+        int dias = configuracionService.valor(ConfiguracionService.CLAVE_DIAS_PRESTAMO).intValue();
+        LocalDate base = prestamo.getFechaLimite().isAfter(hoy) ? prestamo.getFechaLimite() : hoy;
+        prestamo.setFechaLimite(base.plusDays(dias));
+        prestamo.setRenovaciones(prestamo.getRenovaciones() + 1);
+
+        return aRespuesta(prestamoRepository.saveAndFlush(prestamo));
     }
 
     // ---------------- helpers ----------------
@@ -216,14 +283,28 @@ public class PrestamoService implements IPrestamoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Préstamo no encontrado"));
     }
 
-    /** Las reservas pendientes y vigentes del usuario para los libros que se lleva pasan a ATENDIDA. */
-    private int atenderReservas(Usuario usuario, List<Ejemplar> ejemplares) {
+    /**
+     * Las reservas del usuario para los libros que se lleva pasan a ATENDIDA: las LISTA (si se lleva otro ejemplar
+     * distinto al apartado, el apartado queda libre para el siguiente de la cola) y las PENDIENTE vigentes.
+     */
+    private int atenderReservas(Usuario usuario, List<Ejemplar> ejemplares, List<Reserva> listasDelUsuario) {
         Set<Integer> idsLibros = ejemplares.stream()
                 .map(e -> e.getLibro().getIdLibro())
                 .collect(Collectors.toSet());
-        List<Reserva> reservas = reservaRepository.pendientesVigentes(usuario.getIdUsuario(), idsLibros, LocalDate.now());
-        reservas.forEach(r -> r.setEstado(EstadoReserva.ATENDIDA));
-        return reservas.size();
+        Set<Integer> idsEjemplares = ejemplares.stream()
+                .map(Ejemplar::getIdEjemplar)
+                .collect(Collectors.toSet());
+
+        int atendidas = 0;
+        for (Reserva lista : listasDelUsuario) {
+            if (idsLibros.contains(lista.getEjemplar().getLibro().getIdLibro())) {
+                colaReservas.atender(lista, idsEjemplares);
+                atendidas++;
+            }
+        }
+        List<Reserva> pendientes = reservaRepository.pendientesVigentes(usuario.getIdUsuario(), idsLibros, LocalDate.now());
+        pendientes.forEach(r -> r.setEstado(EstadoReserva.ATENDIDA));
+        return atendidas + pendientes.size();
     }
 
     private PrestamoResponse aRespuesta(Prestamo p) {
@@ -235,6 +316,11 @@ public class PrestamoService implements IPrestamoService {
     }
 
     private PrestamoResponse aRespuesta(Prestamo p, int reservasAtendidas, int multasGeneradas, BigDecimal valorMultas) {
+        return aRespuesta(p, reservasAtendidas, multasGeneradas, valorMultas, null);
+    }
+
+    private PrestamoResponse aRespuesta(Prestamo p, int reservasAtendidas, int multasGeneradas, BigDecimal valorMultas,
+                                        String apartadoPara) {
         LocalDate hoy = LocalDate.now();
         boolean finalizado = p.getEstado() == EstadoPrestamo.FINALIZADO;
         boolean vencido = !finalizado && p.getFechaLimite().isBefore(hoy);
@@ -263,10 +349,12 @@ public class PrestamoService implements IPrestamoService {
                 .estado(estado)
                 .diasRetraso(diasRetraso)
                 .observaciones(p.getObservaciones())
+                .renovaciones(p.getRenovaciones())
                 .detalles(detalles)
                 .reservasAtendidas(reservasAtendidas)
                 .multasGeneradas(multasGeneradas)
                 .valorMultasGeneradas(valorMultas)
+                .apartadoPara(apartadoPara)
                 .build();
     }
 }

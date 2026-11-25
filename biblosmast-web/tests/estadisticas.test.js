@@ -62,3 +62,11 @@ test("resumen: indicadores y null cuando el rol no puede ver el dato", () => {
     assert.equal(soloLibros.ejemplaresTotal, null);
     assert.equal(soloLibros.prestamosVencidos, null);
 });
+
+test("resumen: las reservas listas para recoger también cuentan como pendientes", () => {
+    const r = resumen({
+        libros: null, ejemplares: null, prestamos: null, usuarios: null,
+        reservas: [{ estado: "PENDIENTE" }, { estado: "LISTA" }, { estado: "LISTA" }, { estado: "CANCELADA" }, { estado: "VENCIDA" }],
+    });
+    assert.equal(r.reservasPendientes, 3);
+});

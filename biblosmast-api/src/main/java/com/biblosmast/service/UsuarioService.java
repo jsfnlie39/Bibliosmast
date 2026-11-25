@@ -20,6 +20,7 @@ import com.biblosmast.repository.UsuarioRepository;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +51,7 @@ public class UsuarioService implements IUsuarioService {
     private final PrestamoRepository prestamoRepository;
     private final MultaRepository multaRepository;
     private final ReservaRepository reservaRepository;
+    private final IColaReservasService colaReservas;
 
     @Override
     @Transactional(readOnly = true)
@@ -206,17 +208,26 @@ public class UsuarioService implements IUsuarioService {
         cancelarReservasPendientes(usuario);
     }
 
-    /** Un usuario dado de baja no puede recoger sus reservas: se cancelan las pendientes y queda constancia. */
+    /**
+     * Un usuario dado de baja no puede recoger sus reservas: se cancelan las pendientes y las listas, y queda constancia.
+     * El ejemplar que tenía apartado una reserva LISTA pasa al siguiente de la cola.
+     */
     private void cancelarReservasPendientes(Usuario usuario) {
-        List<Reserva> pendientes = reservaRepository
-                .findByUsuarioIdUsuarioAndEstado(usuario.getIdUsuario(), EstadoReserva.PENDIENTE);
-        if (pendientes.isEmpty()) {
+        List<Reserva> pendientes = new ArrayList<>(reservaRepository
+                .findByUsuarioIdUsuarioAndEstado(usuario.getIdUsuario(), EstadoReserva.PENDIENTE));
+        List<Reserva> listas = reservaRepository
+                .findByUsuarioIdUsuarioAndEstado(usuario.getIdUsuario(), EstadoReserva.LISTA);
+        if (pendientes.isEmpty() && listas.isEmpty()) {
             return;
         }
         for (Reserva reserva : pendientes) {
             reserva.setEstado(EstadoReserva.CANCELADA);
         }
         reservaRepository.saveAll(pendientes);
+        for (Reserva reserva : listas) {
+            colaReservas.cerrar(reserva, EstadoReserva.CANCELADA);
+        }
+        pendientes.addAll(listas); // solo para contarlas en la auditoría
         try {
             Authentication autenticacion = SecurityContextHolder.getContext().getAuthentication();
             String actor = (autenticacion == null) ? null : autenticacion.getName();

@@ -2,14 +2,14 @@ import { api, textoError } from "./api.js";
 import { requireSesion, logout } from "./auth.js";
 import { esAdmin } from "./sesion.js";
 import { el, vaciar, mostrarMensaje, llenarSelect } from "./dom.js";
+import {
+    etiquetaEstadoReserva, claseEstadoReserva, textoTurno, opcionesEstadoEdicion,
+} from "./reservas-formato.js";
 
 const $ = (id) => document.getElementById(id);
 
 const ROLES_PERSONAL = ["ADMIN", "BIBLIOTECARIO"];
 const DIAS_RESERVA_POR_DEFECTO = 3;
-const CLASE_ESTADO = {
-    PENDIENTE: "activo", VENCIDA: "vencido", ATENDIDA: "finalizado", CANCELADA: "finalizado",
-};
 
 let reservas = [];
 let editandoId = null; // null = creando, numero = editando
@@ -37,8 +37,6 @@ function sumarDias(dias) {
     fecha.setDate(fecha.getDate() + dias);
     return fecha;
 }
-
-const etiquetaEstado = (estado) => estado.charAt(0) + estado.slice(1).toLowerCase();
 
 /** Si la opcion no esta en el select (p. ej. un usuario que ya no esta activo), la agrega para poder editar. */
 function asegurarOpcion(select, id, texto) {
@@ -82,9 +80,8 @@ function pintarTabla() {
     }
 
     for (const r of reservas) {
-        const cerrada = r.estado === "ATENDIDA" || r.estado === "CANCELADA";
         const acciones = el("td", { class: "acciones" },
-            el("button", { class: "btn secundario chico", type: "button", disabled: cerrada, onclick: () => abrirFormulario(r) }, "Editar"),
+            el("button", { class: "btn secundario chico", type: "button", disabled: !r.editable, onclick: () => abrirFormulario(r) }, "Editar"),
             esAdmin() ? el("button", { class: "btn peligro chico", type: "button", onclick: () => eliminar(r) }, "Eliminar") : "",
         );
         cuerpo.append(el("tr", {},
@@ -92,8 +89,8 @@ function pintarTabla() {
             el("td", {}, r.titulo),
             el("td", {}, formatearFechaHora(r.fechaReserva)),
             el("td", {}, formatearFecha(r.fechaVencimiento)),
-            el("td", {}, el("span", { class: `etiqueta ${CLASE_ESTADO[r.estado]}` }, etiquetaEstado(r.estado))),
-            el("td", {}, r.ejemplaresDisponibles),
+            el("td", {}, el("span", { class: `etiqueta ${claseEstadoReserva(r.estado)}` }, etiquetaEstadoReserva(r.estado))),
+            el("td", {}, textoTurno(r)),
             acciones,
         ));
     }
@@ -108,6 +105,12 @@ function abrirFormulario(reserva = null) {
     $("frmReserva").reset();
     $("grupoEstado").hidden = reserva === null; // al crear siempre queda pendiente
     $("fechaVencimiento").min = aTextoFecha(sumarDias(1));
+
+    // Una reserva lista para recoger ya tiene ejemplar apartado: solo se puede dejar así o cancelar
+    const lista = reserva?.estado === "LISTA";
+    for (const id of ["idUsuario", "idLibro", "fechaVencimiento"]) $(id).disabled = lista;
+    const estados = opcionesEstadoEdicion(reserva?.estado ?? "PENDIENTE");
+    for (const opcion of $("estado").options) opcion.hidden = opcion.disabled = !estados.includes(opcion.value);
 
     if (reserva) {
         asegurarOpcion($("idUsuario"), reserva.idUsuario, `${reserva.usuario} (no activo)`);

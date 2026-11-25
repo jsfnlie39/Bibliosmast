@@ -10,11 +10,13 @@ const ETIQUETAS = {
     LOGIN: "Inicio de sesión", LOGIN_FALLIDO: "Inicio de sesión fallido", LOGIN_BLOQUEADO: "Cuenta bloqueada",
     LOGOUT: "Cierre de sesión", CLAVE_CAMBIADA: "Contraseña cambiada", CLAVE_RESTABLECIDA: "Contraseña restablecida",
     CREAR: "Crear", ACTUALIZAR: "Actualizar", ELIMINAR: "Eliminar", DEVOLUCION: "Devolución",
+    RENOVACION: "Renovación", PAGO: "Pago de multa", CANCELAR: "Cancelar reservas",
 };
 const CLASES = {
     LOGIN: "activo", LOGIN_FALLIDO: "vencido", LOGIN_BLOQUEADO: "vencido", LOGOUT: "finalizado",
     CLAVE_CAMBIADA: "activo", CLAVE_RESTABLECIDA: "vencido", CREAR: "activo", ACTUALIZAR: "finalizado",
     ELIMINAR: "vencido", DEVOLUCION: "finalizado",
+    RENOVACION: "activo", PAGO: "activo", CANCELAR: "finalizado",
 };
 
 /** Date -> "YYYY-MM-DD" en hora local. */

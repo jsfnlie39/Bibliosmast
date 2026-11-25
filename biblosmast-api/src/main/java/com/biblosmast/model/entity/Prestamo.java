@@ -42,6 +42,10 @@ public class Prestamo {
     @Column(name = "observaciones", length = 255)
     private String observaciones;
 
+    /** Cuántas veces se ha renovado (el máximo lo define la configuración `max_renovaciones`). */
+    @Column(name = "renovaciones", nullable = false)
+    private int renovaciones = 0;
+
     @OneToMany(mappedBy = "prestamo", cascade = CascadeType.ALL)
     private List<DetallePrestamo> detalles = new ArrayList<>();
 }

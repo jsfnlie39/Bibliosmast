@@ -2,6 +2,7 @@ package com.biblosmast.service;
 
 import com.biblosmast.model.dto.ReservaRequest;
 import com.biblosmast.model.dto.ReservaResponse;
+import com.biblosmast.model.entity.EstadoEjemplar;
 import com.biblosmast.model.entity.EstadoLibro;
 import com.biblosmast.model.entity.EstadoReserva;
 import com.biblosmast.model.entity.EstadoUsuario;
@@ -14,6 +15,7 @@ import com.biblosmast.repository.ReservaRepository;
 import com.biblosmast.repository.UsuarioRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,28 +36,35 @@ public class ReservaService implements IReservaService {
     private final UsuarioRepository usuarioRepository;
     private final LibroRepository libroRepository;
     private final EjemplarRepository ejemplarRepository;
+    private final IColaReservasService colaReservas;
 
+    // No es de solo lectura: antes de listar se liberan los ejemplares apartados que nadie recogió a tiempo.
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public List<ReservaResponse> listar(String estado, Integer idUsuario) {
+        colaReservas.vencerListas();
         String filtro = (estado == null) ? "" : estado.trim().toUpperCase();
         Map<Integer, Long> disponibles = disponiblesPorLibro();
-        return reservaRepository.listarTodas().stream()
-                .map(r -> aRespuesta(r, disponibles))
+        List<Reserva> todas = reservaRepository.listarTodas();
+        Map<Integer, Integer> posiciones = posiciones(todas);
+        return todas.stream()
+                .map(r -> aRespuesta(r, disponibles, posiciones))
                 .filter(r -> filtro.isEmpty() || r.getEstado().equals(filtro))
                 .filter(r -> idUsuario == null || r.getIdUsuario().equals(idUsuario))
                 .toList();
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public ReservaResponse obtener(Integer id) {
-        return aRespuesta(buscarOFalla(id), disponiblesPorLibro());
+        colaReservas.vencerListas();
+        return respuesta(buscarOFalla(id));
     }
 
     @Override
     @Transactional
     public ReservaResponse crear(ReservaRequest r) {
+        colaReservas.vencerListas();
         if (r.getEstado() != null && r.getEstado() != EstadoReserva.PENDIENTE) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Una reserva nueva siempre queda PENDIENTE");
         }
@@ -66,6 +75,7 @@ public class ReservaService implements IReservaService {
         if (!r.getFechaVencimiento().isAfter(LocalDate.now())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La fecha de vencimiento debe ser posterior a hoy");
         }
+        exigirLibroSinDisponibles(libro);
         exigirSinDuplicada(usuario.getIdUsuario(), libro.getIdLibro(), SIN_EXCLUIR);
 
         Reserva reserva = new Reserva();
@@ -74,21 +84,29 @@ public class ReservaService implements IReservaService {
         reserva.setFechaReserva(LocalDateTime.now());
         reserva.setFechaVencimiento(r.getFechaVencimiento());
         reserva.setEstado(EstadoReserva.PENDIENTE);
-        return aRespuesta(reservaRepository.save(reserva), disponiblesPorLibro());
+        return respuesta(reservaRepository.save(reserva));
     }
 
     @Override
     @Transactional
     public ReservaResponse actualizar(Integer id, ReservaRequest r) {
+        colaReservas.vencerListas();
         Reserva reserva = buscarOFalla(id);
+        if (reserva.getEstado() == EstadoReserva.LISTA) {
+            return actualizarLista(reserva, r);
+        }
         if (reserva.getEstado() != EstadoReserva.PENDIENTE) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Una reserva atendida o cancelada ya no se puede editar");
+                    "Una reserva atendida, cancelada o que venció sin recogerse ya no se puede editar");
         }
         EstadoReserva nuevo = (r.getEstado() == null) ? EstadoReserva.PENDIENTE : r.getEstado();
         if (nuevo == EstadoReserva.VENCIDA) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "El estado VENCIDA se calcula solo con la fecha de vencimiento");
+        }
+        if (nuevo == EstadoReserva.LISTA) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Una reserva pasa sola a LISTA cuando se devuelve un ejemplar y le toca el turno");
         }
         Usuario usuario = usuarioOFalla(r.getIdUsuario());
         Libro libro = libroOFalla(r.getIdLibro());
@@ -109,6 +127,9 @@ public class ReservaService implements IReservaService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "La fecha de vencimiento debe ser posterior a hoy");
             }
+            if (!libro.getIdLibro().equals(reserva.getLibro().getIdLibro())) {
+                exigirLibroSinDisponibles(libro);
+            }
             exigirSinDuplicada(usuario.getIdUsuario(), libro.getIdLibro(), id);
         }
 
@@ -116,13 +137,31 @@ public class ReservaService implements IReservaService {
         reserva.setLibro(libro);
         reserva.setFechaVencimiento(r.getFechaVencimiento());
         reserva.setEstado(nuevo);
-        return aRespuesta(reservaRepository.save(reserva), disponiblesPorLibro());
+        return respuesta(reservaRepository.save(reserva));
+    }
+
+    /** Una reserva LISTA solo se puede dejar como está o cancelar (eso libera el ejemplar para el siguiente). */
+    private ReservaResponse actualizarLista(Reserva reserva, ReservaRequest r) {
+        EstadoReserva nuevo = (r.getEstado() == null) ? EstadoReserva.LISTA : r.getEstado();
+        if (nuevo == EstadoReserva.CANCELADA) {
+            colaReservas.cerrar(reserva, EstadoReserva.CANCELADA);
+            return respuesta(reserva);
+        }
+        if (nuevo != EstadoReserva.LISTA) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Una reserva lista para recoger solo se puede cancelar; se atiende registrando el préstamo");
+        }
+        return respuesta(reserva);
     }
 
     @Override
     @Transactional
     public void eliminar(Integer id) {
-        reservaRepository.delete(buscarOFalla(id));
+        Reserva reserva = buscarOFalla(id);
+        if (reserva.getEstado() == EstadoReserva.LISTA) {
+            colaReservas.cerrar(reserva, EstadoReserva.CANCELADA); // libera el ejemplar apartado
+        }
+        reservaRepository.delete(reserva);
     }
 
     // ---------------- helpers ----------------
@@ -155,6 +194,21 @@ public class ReservaService implements IReservaService {
         }
     }
 
+    /** Se reserva solo cuando no hay ejemplar libre; si lo hay, lo que corresponde es registrar el préstamo. */
+    private void exigirLibroSinDisponibles(Libro libro) {
+        Integer idLibro = libro.getIdLibro();
+        if (ejemplarRepository.countByLibroIdLibroAndEstado(idLibro, EstadoEjemplar.DISPONIBLE) > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Este libro tiene ejemplares disponibles: regístrale el préstamo en lugar de una reserva");
+        }
+        long enCirculacion = ejemplarRepository.countByLibroIdLibroAndEstado(idLibro, EstadoEjemplar.PRESTADO)
+                + ejemplarRepository.countByLibroIdLibroAndEstado(idLibro, EstadoEjemplar.RESERVADO);
+        if (enCirculacion == 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Este libro no tiene ejemplares prestados que puedan devolverse: no se puede reservar");
+        }
+    }
+
     private void exigirSinDuplicada(Integer idUsuario, Integer idLibro, Integer excluirId) {
         if (reservaRepository.contarVigentes(idUsuario, idLibro, LocalDate.now(), excluirId) > 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -172,7 +226,30 @@ public class ReservaService implements IReservaService {
         return mapa;
     }
 
-    private ReservaResponse aRespuesta(Reserva r, Map<Integer, Long> disponibles) {
+    /** Turno de cada reserva PENDIENTE y vigente dentro de la cola de su libro (por orden de llegada). */
+    private Map<Integer, Integer> posiciones(List<Reserva> todas) {
+        LocalDate hoy = LocalDate.now();
+        Map<Integer, List<Reserva>> porLibro = new HashMap<>();
+        for (Reserva r : todas) {
+            if (r.getEstado() == EstadoReserva.PENDIENTE && !r.getFechaVencimiento().isBefore(hoy)) {
+                porLibro.computeIfAbsent(r.getLibro().getIdLibro(), k -> new java.util.ArrayList<>()).add(r);
+            }
+        }
+        Map<Integer, Integer> posiciones = new HashMap<>();
+        for (List<Reserva> cola : porLibro.values()) {
+            cola.sort(Comparator.comparing(Reserva::getFechaReserva).thenComparing(Reserva::getIdReserva));
+            for (int i = 0; i < cola.size(); i++) {
+                posiciones.put(cola.get(i).getIdReserva(), i + 1);
+            }
+        }
+        return posiciones;
+    }
+
+    private ReservaResponse respuesta(Reserva r) {
+        return aRespuesta(r, disponiblesPorLibro(), posiciones(reservaRepository.listarTodas()));
+    }
+
+    private ReservaResponse aRespuesta(Reserva r, Map<Integer, Long> disponibles, Map<Integer, Integer> posiciones) {
         boolean vencida = r.getEstado() == EstadoReserva.PENDIENTE
                 && r.getFechaVencimiento().isBefore(LocalDate.now());
         String estado = vencida ? EstadoReserva.VENCIDA.name() : r.getEstado().name();
@@ -190,6 +267,11 @@ public class ReservaService implements IReservaService {
                 .fechaVencimiento(r.getFechaVencimiento())
                 .estado(estado)
                 .ejemplaresDisponibles(disponibles.getOrDefault(l.getIdLibro(), 0L))
+                .posicionCola(posiciones.get(r.getIdReserva()))
+                .fechaLimiteRecogida(r.getEstado() == EstadoReserva.LISTA ? r.getFechaLimiteRecogida() : null)
+                .codigoEjemplar(r.getEstado() == EstadoReserva.LISTA && r.getEjemplar() != null
+                        ? r.getEjemplar().getCodigo() : null)
+                .editable(r.getEstado() == EstadoReserva.PENDIENTE || r.getEstado() == EstadoReserva.LISTA)
                 .build();
     }
 }

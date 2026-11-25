@@ -4,9 +4,11 @@ import com.biblosmast.model.dto.EjemplarRequest;
 import com.biblosmast.model.dto.EjemplarResponse;
 import com.biblosmast.model.entity.Ejemplar;
 import com.biblosmast.model.entity.EstadoEjemplar;
+import com.biblosmast.model.entity.EstadoReserva;
 import com.biblosmast.model.entity.Libro;
 import com.biblosmast.repository.EjemplarRepository;
 import com.biblosmast.repository.LibroRepository;
+import com.biblosmast.repository.ReservaRepository;
 import java.util.Comparator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,8 @@ public class EjemplarService implements IEjemplarService {
 
     private final EjemplarRepository ejemplarRepository;
     private final LibroRepository libroRepository;
+    private final ReservaRepository reservaRepository;
+    private final IColaReservasService colaReservas;
 
     @Override
     @Transactional(readOnly = true)
@@ -55,7 +59,9 @@ public class EjemplarService implements IEjemplarService {
         ejemplar.setCodigo(codigo);
         ejemplar.setUbicacion(vacioANull(r.getUbicacion()));
         ejemplar.setEstado(r.getEstado() == null ? EstadoEjemplar.DISPONIBLE : r.getEstado());
-        return aRespuesta(ejemplarRepository.save(ejemplar));
+        Ejemplar guardado = ejemplarRepository.save(ejemplar);
+        atenderColaSiQuedaDisponible(guardado);
+        return aRespuesta(guardado);
     }
 
     @Override
@@ -66,6 +72,7 @@ public class EjemplarService implements IEjemplarService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "El ejemplar está prestado: edítalo cuando lo devuelvan");
         }
+        exigirNoApartado(ejemplar);
         String codigo = r.getCodigo().trim();
         if (ejemplarRepository.existsByCodigoAndIdEjemplarNot(codigo, id)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe otro ejemplar con ese código");
@@ -78,7 +85,9 @@ public class EjemplarService implements IEjemplarService {
         if (r.getEstado() != null) {
             ejemplar.setEstado(r.getEstado());
         }
-        return aRespuesta(ejemplarRepository.save(ejemplar));
+        Ejemplar guardado = ejemplarRepository.save(ejemplar);
+        atenderColaSiQuedaDisponible(guardado);
+        return aRespuesta(guardado);
     }
 
     @Override
@@ -88,6 +97,7 @@ public class EjemplarService implements IEjemplarService {
         if (ejemplar.getEstado() == EstadoEjemplar.PRESTADO) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "No se puede eliminar un ejemplar prestado");
         }
+        exigirNoApartado(ejemplar);
         try {
             ejemplarRepository.delete(ejemplar);
             ejemplarRepository.flush();
@@ -108,6 +118,21 @@ public class EjemplarService implements IEjemplarService {
     private Libro libroOFalla(Integer idLibro) {
         return libroRepository.findById(idLibro)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "El libro no existe"));
+    }
+
+    /** Un ejemplar apartado para una reserva LISTA no se edita ni se elimina: primero hay que cancelar esa reserva. */
+    private void exigirNoApartado(Ejemplar ejemplar) {
+        if (reservaRepository.existsByEjemplarIdEjemplarAndEstado(ejemplar.getIdEjemplar(), EstadoReserva.LISTA)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "El ejemplar está apartado para una reserva lista para recoger: cancela esa reserva primero");
+        }
+    }
+
+    /** Si el ejemplar quedó DISPONIBLE y hay gente esperando ese libro, se aparta para el primero de la cola. */
+    private void atenderColaSiQuedaDisponible(Ejemplar ejemplar) {
+        if (ejemplar.getEstado() == EstadoEjemplar.DISPONIBLE) {
+            colaReservas.asignarEjemplarLibre(ejemplar.getLibro().getIdLibro());
+        }
     }
 
     private void validarEstadoAsignable(EstadoEjemplar estado) {

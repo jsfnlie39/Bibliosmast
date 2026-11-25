@@ -9,13 +9,14 @@
 <body data-pagina="reservas">
     <main class="contenedor">
         <h1>Reservas</h1>
-        <p class="nota">Una reserva aparta un libro para un usuario hasta la fecha de vencimiento. Cuando haya un ejemplar disponible, se atiende registrando el préstamo: la reserva del usuario para ese libro pasa sola a Atendida.</p>
+        <p class="nota">Solo se reserva un libro cuando no queda ningún ejemplar disponible: las reservas forman una cola por orden de llegada. Al devolverse un ejemplar, se aparta para el primero de la cola y su reserva pasa a «Lista para recoger» (tiene unos días para recogerlo). Si no lo recoge a tiempo, el ejemplar pasa al siguiente. Se atiende registrando el préstamo: la reserva pasa sola a Atendida.</p>
         <div id="mensaje" class="mensaje" hidden role="status"></div>
 
         <div class="herramientas">
             <select id="filtroEstado" aria-label="Filtrar por estado">
                 <option value="">Todos los estados</option>
-                <option value="PENDIENTE">Pendientes</option>
+                <option value="PENDIENTE">En cola</option>
+                <option value="LISTA">Listas para recoger</option>
                 <option value="VENCIDA">Vencidas</option>
                 <option value="ATENDIDA">Atendidas</option>
                 <option value="CANCELADA">Canceladas</option>
@@ -28,7 +29,7 @@
                 <thead>
                     <tr>
                         <th>Usuario</th><th>Libro</th><th>Reservada</th><th>Vence</th>
-                        <th>Estado</th><th>Ejemplares disponibles</th><th></th>
+                        <th>Estado</th><th>Turno / recogida</th><th></th>
                     </tr>
                 </thead>
                 <tbody id="tbodyReservas"></tbody>
@@ -56,11 +57,12 @@
                 <div class="campo">
                     <label for="estado">Estado</label>
                     <select id="estado">
-                        <option value="PENDIENTE">Pendiente</option>
+                        <option value="PENDIENTE">En cola</option>
+                        <option value="LISTA">Lista para recoger</option>
                         <option value="ATENDIDA">Atendida</option>
                         <option value="CANCELADA">Cancelada</option>
                     </select>
-                    <p class="nota">«Vencida» se calcula sola cuando pasa la fecha de vencimiento. Una reserva atendida o cancelada ya no se edita.</p>
+                    <p class="nota">«Vencida» se calcula sola cuando pasa la fecha de vencimiento. «Lista para recoger» la asigna el sistema al devolverse un ejemplar; una reserva en ese estado solo se puede cancelar (el ejemplar pasa al siguiente de la cola). Una reserva atendida o cancelada ya no se edita.</p>
                 </div>
             </div>
             <div class="dialogo-botones">

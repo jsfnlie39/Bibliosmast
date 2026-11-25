@@ -20,10 +20,14 @@ public class PrestamoResponse {
     private String estado;
     private long diasRetraso;
     private String observaciones;
+    /** Veces que se ha renovado este préstamo. */
+    private int renovaciones;
     private List<DetallePrestamoResponse> detalles;
     /** Reservas del usuario que este préstamo atendió. Solo se llena al registrar el préstamo; en las consultas es 0. */
     private int reservasAtendidas;
     /** Multas que generó la devolución de un ejemplar. Solo se llena al devolver; en las consultas es 0. */
     private int multasGeneradas;
     private BigDecimal valorMultasGeneradas;
+    /** Nombre de quien esperaba en la cola y recibe el ejemplar devuelto (queda apartado para él). Solo al devolver. */
+    private String apartadoPara;
 }

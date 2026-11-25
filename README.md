@@ -38,7 +38,7 @@ Endpoints (etapas 1, 2 y 3):
 | GET | `/api/opciones/categorias`, `/api/opciones/editoriales`, `/api/opciones/autores` | Listas (id y nombre) para los formularios |
 | GET, POST | `/api/autores`, `/api/categorias`, `/api/editoriales` | Listar y crear (201) |
 | GET, PUT, DELETE | `/api/autores/{id}`, `/api/categorias/{id}`, `/api/editoriales/{id}` | Consultar, actualizar y eliminar (409 si tiene libros asociados) |
-| GET | `/api/usuarios/activos`, `/api/ejemplares/disponibles` | Listas para el formulario de préstamos |
+| GET | `/api/usuarios/activos`, `/api/ejemplares/disponibles?idUsuario=` | Listas para el formulario de préstamos. Con `idUsuario`, los ejemplares disponibles incluyen los que ese usuario tiene apartados por una reserva lista para recoger |
 | GET | `/api/ejemplares?idLibro=` | Listar ejemplares (todos o de un libro) |
 | GET | `/api/ejemplares/{id}` | Consultar un ejemplar |
 | POST | `/api/ejemplares` | Registrar ejemplar (201). Queda DISPONIBLE por defecto |
@@ -54,10 +54,11 @@ Endpoints (etapas 1, 2 y 3):
 | GET | `/api/prestamos/{id}` | Consultar un préstamo con sus ejemplares |
 | POST | `/api/prestamos` | Registrar préstamo (201). Body: `idUsuario`, `idBibliotecario`, `fechaLimite`, `idsEjemplares` (máx. 5), `observaciones` |
 | PUT | `/api/prestamos/{id}/detalles/{idDetalle}/devolucion` | Devolver un ejemplar. Body `{ "estadoDevolucion": "BUEN_ESTADO\|DANADO\|PERDIDO" }` |
-| GET | `/api/reservas?estado=PENDIENTE\|VENCIDA\|ATENDIDA\|CANCELADA&idUsuario=` | Listar reservas (filtros opcionales). Incluye cuántos ejemplares del libro están disponibles |
+| PUT | `/api/prestamos/{id}/renovar` | Renovar un préstamo (sin body). Devuelve el préstamo con la nueva fecha límite; 409 si no se puede renovar. Se audita como `RENOVACION` |
+| GET | `/api/reservas?estado=PENDIENTE\|LISTA\|VENCIDA\|ATENDIDA\|CANCELADA&idUsuario=` | Listar reservas (filtros opcionales). Trae `posicionCola` (turno en la cola), y en las LISTA `fechaLimiteRecogida` y `codigoEjemplar`. Antes de listar se liberan los ejemplares que nadie recogió a tiempo |
 | GET | `/api/reservas/{id}` | Consultar una reserva |
-| POST | `/api/reservas` | Crear (201). Body: `idUsuario`, `idLibro`, `fechaVencimiento`. Siempre queda PENDIENTE |
-| PUT | `/api/reservas/{id}` | Actualizar. Body igual más `estado` (`PENDIENTE`, `ATENDIDA` o `CANCELADA`). No se edita una reserva atendida o cancelada |
+| POST | `/api/reservas` | Crear (201). Body: `idUsuario`, `idLibro`, `fechaVencimiento`. Siempre queda PENDIENTE (en cola). 409 si el libro tiene ejemplares disponibles o ninguno prestado |
+| PUT | `/api/reservas/{id}` | Actualizar. Body igual más `estado` (`PENDIENTE`, `ATENDIDA` o `CANCELADA`). Una reserva LISTA solo se puede dejar así o cancelar (`CANCELADA`). No se edita una reserva atendida, cancelada o vencida sin recoger |
 | DELETE | `/api/reservas/{id}` | Eliminar (204) |
 
 Todas las rutas, salvo el login, exigen el encabezado `Authorization: Bearer <token>` (ver la sección «Seguridad con JWT»).
@@ -78,7 +79,7 @@ npm run dev        # abre http://localhost:5173
 | Comando | Qué hace |
 |---|---|
 | `npm run dev` | Servidor de desarrollo en `http://localhost:5173` (ya está permitido en CORS) |
-| `npm test` | 55 pruebas automáticas (sesión y token, cierre de sesión, clave temporal, registro, recuperación, tablas, panel, menú, tema) |
+| `npm test` | 64 pruebas automáticas (sesión y token, cierre de sesión, clave temporal, registro, recuperación, tablas, panel, menú, tema, multas, renovación, cola de reservas) |
 | `npm run build` | Genera la carpeta `dist/` lista para publicar |
 
 Si la API cambia de puerto, editar `js/config.js`.
@@ -111,9 +112,9 @@ Flujo sugerido para dos personas: una rama por módulo (`feature/libros`, `featu
 - [x] Etapa 3: usuarios y roles (solo ADMIN)
 - [ ] Etapa 4, en este orden de prioridad:
   - [x] Autores, categorías y editoriales (CRUD)
-  - [ ] Multas por retraso, daño o pérdida
-  - [x] Reservas
-  - [ ] Auditoría
+  - [x] Multas por retraso, daño o pérdida
+  - [x] Reservas (con cola: la reserva pasa a «Lista para recoger» al devolverse un ejemplar)
+  - [x] Auditoría
 
 ## Cómo funciona el préstamo
 - Solo ADMIN y BIBLIOTECARIO entran al módulo. El préstamo lo registra la persona que inició sesión.
@@ -123,13 +124,29 @@ Flujo sugerido para dos personas: una rama por módulo (`feature/libros`, `featu
 - Si el usuario tenía una reserva vigente de alguno de los libros, esa reserva pasa a ATENDIDA al registrar el préstamo.
 - El préstamo pasa a FINALIZADO cuando se devuelven todos sus ejemplares. Se muestra como VENCIDO si sigue activo y pasó la fecha límite (con los días de retraso).
 
-## Reservas
-- Solo ADMIN y BIBLIOTECARIO entran al módulo. Una reserva aparta un libro (no un ejemplar concreto) para un usuario hasta una fecha de vencimiento.
-- Solo reservan usuarios ACTIVO y libros ACTIVO. La fecha de vencimiento debe ser posterior a hoy. Un usuario no puede tener dos reservas pendientes vigentes del mismo libro (409).
-- Al crear queda PENDIENTE. Se puede cambiar a ATENDIDA o CANCELADA; después ya no se edita. VENCIDA no se guarda: se muestra cuando una pendiente pasó su fecha de vencimiento.
-- Una reserva vencida se puede cancelar o reactivar con una nueva fecha. Eliminar la borra del todo.
-- Al registrar un préstamo, las reservas pendientes y vigentes de ese usuario para los libros que se lleva pasan solas a ATENDIDA (la respuesta del `POST /api/prestamos` trae `reservasAtendidas`). Una reserva vencida no se atiende sola. También se puede marcar ATENDIDA a mano.
-- Un préstamo no revisa si otra persona tiene reservado el último ejemplar: la reserva avisa, pero no bloquea.
+## Reservas (con cola)
+- Solo ADMIN y BIBLIOTECARIO entran al módulo. Una reserva pone a un usuario en la **cola de un libro**; el orden es por fecha de reserva (`posicionCola`: turno 1 = el siguiente).
+- **Solo se reserva si el libro no tiene ningún ejemplar disponible** (409 «tiene ejemplares disponibles: regístrale el préstamo») y si tiene al menos uno prestado que pueda volver (409 si no).
+- Solo reservan usuarios ACTIVO y libros ACTIVO. La fecha de vencimiento debe ser posterior a hoy. Un usuario no puede tener dos reservas abiertas (en cola o lista) del mismo libro (409).
+- Al crear queda PENDIENTE («En cola»). **Cuando se devuelve un ejemplar en buen estado**, el ejemplar queda RESERVADO y la primera reserva vigente de la cola (de un usuario ACTIVO) pasa a **LISTA**: tiene `dias_recogida_reserva` días (3 de ejemplo) para recoger. La respuesta de la devolución trae `apartadoPara` con el nombre y la pantalla de Préstamos lo avisa.
+- Una reserva LISTA se atiende **registrando el préstamo**: ese ejemplar solo se le puede prestar a quien lo tiene apartado (en el formulario aparece como «apartado para este usuario»; para los demás es 409). La reserva pasa sola a ATENDIDA. Si el usuario se lleva otro ejemplar del mismo libro, el apartado se libera para el siguiente de la cola.
+- Si la reserva LISTA se **cancela, se elimina, vence sin recogerse o el usuario se da de baja**, el ejemplar apartado pasa al siguiente de la cola (o vuelve a DISPONIBLE si no hay nadie). Una LISTA que venció queda guardada como VENCIDA y ya no se edita.
+- No se puede editar ni eliminar un ejemplar que está apartado para una reserva LISTA (409): primero se cancela la reserva. Si un ejemplar queda DISPONIBLE al crearlo o editarlo y hay cola, se aparta para el primero.
+- Una PENDIENTE que pasó su fecha de vencimiento se muestra como Vencida (no se guarda) y se puede cancelar o reactivar con una nueva fecha; la cola la salta. Eliminar una reserva la borra del todo.
+- Al registrar un préstamo, las reservas PENDIENTE vigentes del usuario para los libros que se lleva también pasan a ATENDIDA (la respuesta del `POST /api/prestamos` trae `reservasAtendidas`, que cuenta las LISTA y las PENDIENTE).
+- **Sin tareas automáticas todavía:** los plazos de recogida vencidos se liberan al abrir Reservas, al registrar un préstamo o al crear/editar una reserva. Cuando existan las tareas `@Scheduled` (punto 11), lo harán solas cada día.
+- El panel cuenta como «Reservas pendientes» las que están en cola y las listas para recoger.
+- **Hay que volver a ejecutar `biblosmast_db.sql`**: la tabla `reserva` tiene el estado `LISTA` y las columnas `fecha_limite_recogida` e `id_ejemplar`, y hay una clave nueva en `configuracion` (`dias_recogida_reserva`). Las reservas de ejemplo no cambian: siguen PENDIENTE aunque el libro tenga ejemplares libres (la cola se mueve cuando algo se devuelve).
+
+**Pruebas de la cola de reservas** (con `admin` o `biblio`; base recién creada con el script)
+1. Reservas > Nueva reserva de `laura` para *Cosmos* (tiene su ejemplar libre): 409 «tiene ejemplares disponibles».
+2. Préstamos: prestar `LIB-0002-A` (*Clean Code*) a `laura`. Reservas > Nueva reserva de `biblio` (Beatriz) para *Clean Code*: ahora sí se puede. La tabla muestra a `carlos` con «Turno 1» (su reserva de ejemplo) y a Beatriz con «Turno 2». Si pasaron más de 3 días desde que corriste el script, la de `carlos` aparece Vencida: reactívala con una fecha nueva.
+3. Devolver `LIB-0002-A` en «Buen estado»: el mensaje dice «El ejemplar quedó apartado para Carlos Mejia, que ya puede recogerlo». En Reservas, `carlos` queda «Lista para recoger» con «Recoger hasta (hoy + 3 días) · LIB-0002-A» y Beatriz pasa a «Turno 1». En Ejemplares, `LIB-0002-A` está RESERVADO.
+4. Nuevo préstamo: con otro usuario, `LIB-0002-A` no aparece en la lista; al elegir `carlos` aparece «(apartado para este usuario)». Probar por Swagger un préstamo de `LIB-0002-A` a `laura`: 409 «Ejemplares no disponibles».
+5. Ejemplares: editar o eliminar `LIB-0002-A`: 409 «apartado para una reserva lista para recoger».
+6. Prestar `LIB-0002-A` a `carlos`: «Se atendió 1 reserva del usuario»; su reserva queda Atendida y Beatriz sigue en «Turno 1». Devolverlo en buen estado: queda apartado para Beatriz.
+7. Editar la reserva de Beatriz y ponerla en «Cancelada»: `LIB-0002-A` vuelve a DISPONIBLE (ya no hay nadie en la cola). Repetir 2 y 3 y, con una reserva LISTA, ejecutar en DBeaver `UPDATE reserva SET fecha_limite_recogida = DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) WHERE estado = 'LISTA';` y abrir Reservas: queda Vencida y el ejemplar pasa al siguiente o a DISPONIBLE.
+8. Dar de baja (Usuarios) a alguien con una reserva LISTA, sin préstamos ni multas pendientes: su reserva queda Cancelada y el ejemplar pasa al siguiente de la cola. En Auditoría aparece `CANCELAR`.
 
 ## Multas
 
@@ -158,11 +175,29 @@ La respuesta de la devolución trae `multasGeneradas` y `valorMultasGeneradas`, 
 6. Con ese usuario aún con multa pendiente, intentar darlo de baja como `admin`: 409 «tiene multas pendientes de pago». Tras registrar el pago, la baja sí funciona.
 7. Devolver otro ejemplar como Dañado y otro como Perdido: multas de 10.000 y 30.000. En Auditoría aparece `PAGO`.
 
+## Renovar préstamos
+
+`PUT /api/prestamos/{id}/renovar` (ADMIN y BIBLIOTECARIO). El botón «Renovar» aparece en Préstamos solo en los activos. Reglas (todas responden 409 con el motivo):
+- El préstamo no puede estar finalizado ni vencido.
+- Máximo de renovaciones: `max_renovaciones` (2 de ejemplo). La columna `prestamo.renovaciones` cuenta las usadas.
+- El usuario no puede tener multas pendientes.
+- Ningún libro que siga prestado puede tener una reserva pendiente y vigente de **otra** persona.
+- La nueva fecha límite es la mayor entre la actual y hoy, más `dias_prestamo` (7 de ejemplo).
+
+Los dos valores están en la tabla `configuracion`. No aparecen en la pantalla de Multas (solo muestra las claves `multa_*`); el ADMIN los cambia con `PUT /api/configuracion/{clave}` (por ejemplo desde Swagger). **Hay que volver a ejecutar `biblosmast_db.sql`** porque cambia la tabla `prestamo` y se agregan dos claves.
+
+**Pruebas de renovación** (con `admin` o `biblio`)
+1. Crear un préstamo para `carlos` y pulsar «Renovar»: «Nueva fecha límite» sube 7 días y la columna Renovaciones dice «1 vez». En Auditoría aparece `RENOVACION`.
+2. Renovar otra vez (2 veces) y una tercera: 409 «ya se usaron las 2 renovaciones permitidas».
+3. Prestar `LIB-0002-A` (*Clean Code*, un solo ejemplar) a `carlos`; crear una reserva vigente de `laura` para *Clean Code* (ahora se puede porque no queda ejemplar libre) y renovar el préstamo de `carlos`: 409 «otra persona tiene reservado alguno de estos libros». Cancelar la reserva y renovar: funciona.
+4. Dar a un usuario una multa pendiente (devolver un ejemplar tarde en otro préstamo) e intentar renovar su préstamo activo: 409 «multas pendientes».
+5. Intentar renovar un préstamo finalizado: 409. Un préstamo vencido: 409 (los de prueba traen la fecha límite en el futuro; para probarlo hay que cambiar `fecha_limite` en la base).
+
 ## Usuarios y roles
 - Solo ADMIN entra al módulo. Crear un usuario crea a la vez su cuenta (usuario, contraseña cifrada y rol).
 - Al editar, si la contraseña va vacía no se cambia. Documento, correo y nombre de usuario no se pueden repetir (409).
 - No se puede dar de baja, desactivar ni cambiar de rol al último administrador activo.
-- **Eliminar un usuario es una baja lógica** (ver «Fase 1b»): el usuario no se borra, su cuenta se bloquea y se conserva todo su historial. No se puede dar de baja a quien tiene préstamos sin devolver ni multas pendientes; al darlo de baja se cancelan sus reservas pendientes.
+- **Eliminar un usuario es una baja lógica** (ver «Fase 1b»): el usuario no se borra, su cuenta se bloquea y se conserva todo su historial. No se puede dar de baja a quien tiene préstamos sin devolver ni multas pendientes; al darlo de baja se cancelan sus reservas pendientes y las listas para recoger (el ejemplar apartado pasa al siguiente de la cola).
 
 ## Seguridad con JWT
 **Flujo**
@@ -233,7 +268,7 @@ Cambios en la base de datos (fase 1): la tabla `cuenta` tiene 4 columnas nuevas 
 | **Ver dados de baja** | `GET /api/usuarios?eliminados=true` (solo ADMIN). En la pantalla Usuarios: casilla «Ver usuarios dados de baja» (solo consulta) |
 | **Crear cuenta** | Pantalla `registro.html` → `POST /api/auth/registro`. Rol USUARIO, estado ACTIVO, sesión iniciada al terminar |
 | **Recuperar contraseña** | `recuperar.html` pide el correo → la API crea un código aleatorio de 32 bytes (en la base solo se guarda su hash SHA-256), vence a los 30 minutos y es de un solo uso; un enlace nuevo invalida los anteriores; máximo uno por minuto por cuenta. `restablecer.html?token=…` pide la clave nueva, que además cierra las sesiones abiertas |
-| **Correo** | Se envía con `spring-boot-starter-mail` solo si se definen las variables de entorno `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`, `SPRING_MAIL_USERNAME` y `SPRING_MAIL_PASSWORD` (y opcionalmente `MAIL_FROM`). **Sin ellas, el enlace aparece en la consola de la API** (modo desarrollo) |
+| **Correo** | Se envía con `spring-boot-starter-mail` solo si se definen las variables de entorno `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`, `SPRING_MAIL_USERNAME` y `SPRING_MAIL_PASSWORD` (y opcionalmente `MAIL_FROM`). **Sin ellas, el enlace aparece en la consola de la API** (modo desarrollo). Para Gmail: `SPRING_MAIL_HOST=smtp.gmail.com`, `SPRING_MAIL_PORT=587`, el usuario es la cuenta de Gmail, la contraseña es una **contraseña de aplicación** de 16 letras (requiere verificación en dos pasos) y `MAIL_FROM` debe ser esa misma cuenta; `auth` y `starttls` ya están en `application.properties` |
 
 Cambios en la base de datos (fase 1b): `usuario` (+`eliminado`, `fecha_baja` y 2 columnas calculadas con su UNIQUE), `cuenta` (+`eliminada` y 1 columna calculada con su UNIQUE), y la tabla nueva `recuperacion_clave`. La base queda con **15 tablas**. Hay que volver a ejecutar `biblosmast_db.sql`.
 
@@ -243,7 +278,7 @@ Cambios en la base de datos (fase 1b): `usuario` (+`eliminado`, `fecha_baja` y 2
 3. Registrarse de nuevo en `registro.html` con el mismo correo, documento y usuario: se crea una cuenta nueva y la anterior sigue guardada.
 4. «¿Olvidaste tu contraseña?» con ese correo: copiar el enlace desde la consola de la API, abrirlo y elegir una clave nueva; entrar con ella. Usar el mismo enlace otra vez: «El enlace no es válido o ya venció».
 5. Intentar dar de baja a un usuario con un préstamo sin devolver: 409. Intentar dar de baja al único administrador: 409.
-6. Dar de baja a `laura` (o a quien tenga una reserva pendiente) sin préstamos ni multas pendientes: sus reservas pasan a «Cancelada» en Reservas y en Auditoría aparece la acción `CANCELAR`.
+6. Dar de baja a `laura` (o a quien tenga una reserva pendiente o lista) sin préstamos ni multas pendientes: sus reservas pasan a «Cancelada» en Reservas y en Auditoría aparece la acción `CANCELAR`.
 
 ## Limitaciones conocidas
 - El token se guarda en `sessionStorage`: se borra al cerrar la pestaña, pero un ataque XSS podría leerlo. El frontend crea los elementos con `textContent` para evitarlo. En producción se recomienda HTTPS y valorar una cookie `HttpOnly`.

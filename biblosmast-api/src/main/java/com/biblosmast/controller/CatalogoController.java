@@ -6,6 +6,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -36,8 +37,9 @@ public class CatalogoController {
     }
 
     @GetMapping("/ejemplares/disponibles")
-    public List<OpcionDto> ejemplaresDisponibles() {
-        return catalogoService.ejemplaresDisponibles();
+    public List<OpcionDto> ejemplaresDisponibles(
+            @RequestParam(name = "idUsuario", required = false) Integer idUsuario) {
+        return catalogoService.ejemplaresDisponibles(idUsuario);
     }
 
     @GetMapping("/roles")

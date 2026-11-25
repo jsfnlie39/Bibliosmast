@@ -65,7 +65,8 @@ export function resumen({ libros, ejemplares, prestamos, reservas, usuarios }) {
         ejemplaresDisponibles: ejemplaresPorEst ? (ejemplaresPorEst.DISPONIBLE ?? 0) : null,
         prestamosActivos: prestamosPorEst ? (prestamosPorEst.ACTIVO ?? 0) : null,
         prestamosVencidos: prestamosPorEst ? (prestamosPorEst.VENCIDO ?? 0) : null,
-        reservasPendientes: reservasPorEst ? (reservasPorEst.PENDIENTE ?? 0) : null,
+        // «Pendientes» = las que siguen abiertas: en cola o listas para recoger
+        reservasPendientes: reservasPorEst ? (reservasPorEst.PENDIENTE ?? 0) + (reservasPorEst.LISTA ?? 0) : null,
         usuarios: tiene(usuarios) ? usuarios.length : null,
     };
 }

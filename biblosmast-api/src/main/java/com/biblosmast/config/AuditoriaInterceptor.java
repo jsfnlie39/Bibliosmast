@@ -51,6 +51,7 @@ public class AuditoriaInterceptor implements HandlerInterceptor {
             Integer idRegistro = (partes.length > 3 && partes[3].matches("\\d{1,9}")) ? Integer.valueOf(partes[3]) : null;
             String accion = ruta.endsWith("/devolucion") ? "DEVOLUCION"
                     : ruta.endsWith("/pago") ? "PAGO"
+                    : ruta.endsWith("/renovar") ? "RENOVACION"
                     : "POST".equals(metodo) ? "CREAR"
                     : "PUT".equals(metodo) ? "ACTUALIZAR" : "ELIMINAR";
 

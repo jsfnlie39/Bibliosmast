@@ -10,5 +10,7 @@ public interface IPrestamoService {
     List<PrestamoResponse> listar(String estado, Integer idUsuario);
     PrestamoResponse obtener(Integer id);
     PrestamoResponse crear(PrestamoRequest request);
+    /** Extiende la fecha límite (máx. `max_renovaciones` veces). 409 si el préstamo no se puede renovar. */
+    PrestamoResponse renovar(Integer idPrestamo);
     PrestamoResponse devolver(Integer idPrestamo, Integer idDetalle, DevolucionRequest request);
 }

@@ -33,7 +33,16 @@ public class Reserva {
     @Column(name = "fecha_vencimiento", nullable = false)
     private LocalDate fechaVencimiento;
 
-    // VENCIDA no se guarda: se calcula al consultar (PENDIENTE con fecha pasada), igual que en los préstamos.
+    /** Cuando la reserva pasa a LISTA: último día para recoger el ejemplar apartado (inclusive). */
+    @Column(name = "fecha_limite_recogida")
+    private LocalDate fechaLimiteRecogida;
+
+    /** Ejemplar apartado mientras la reserva está LISTA (o el que se entregó, si ya se atendió). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_ejemplar")
+    private Ejemplar ejemplar;
+
+    // VENCIDA se guarda solo si una reserva LISTA no se recogió a tiempo; la PENDIENTE vencida: se calcula al consultar (PENDIENTE con fecha pasada), igual que en los préstamos.
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
     private EstadoReserva estado = EstadoReserva.PENDIENTE;

@@ -34,6 +34,11 @@ public class PrestamoController {
         return prestamoService.crear(request);
     }
 
+    @PutMapping("/{idPrestamo}/renovar")
+    public PrestamoResponse renovar(@PathVariable Integer idPrestamo) {
+        return prestamoService.renovar(idPrestamo);
+    }
+
     @PutMapping("/{idPrestamo}/detalles/{idDetalle}/devolucion")
     public PrestamoResponse devolver(@PathVariable Integer idPrestamo,
                                      @PathVariable Integer idDetalle,

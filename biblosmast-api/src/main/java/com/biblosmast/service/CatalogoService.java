@@ -3,12 +3,16 @@ package com.biblosmast.service;
 import com.biblosmast.model.dto.OpcionDto;
 import com.biblosmast.repository.AutorRepository;
 import com.biblosmast.repository.CategoriaRepository;
+import com.biblosmast.model.entity.Ejemplar;
 import com.biblosmast.model.entity.EstadoEjemplar;
 import com.biblosmast.model.entity.EstadoUsuario;
+import com.biblosmast.model.entity.Reserva;
 import com.biblosmast.repository.EditorialRepository;
 import com.biblosmast.repository.EjemplarRepository;
+import com.biblosmast.repository.ReservaRepository;
 import com.biblosmast.repository.RolRepository;
 import com.biblosmast.repository.UsuarioRepository;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +30,7 @@ public class CatalogoService {
     private final AutorRepository autorRepository;
     private final UsuarioRepository usuarioRepository;
     private final EjemplarRepository ejemplarRepository;
+    private final ReservaRepository reservaRepository;
     private final RolRepository rolRepository;
 
     public List<OpcionDto> categorias() {
@@ -57,9 +62,22 @@ public class CatalogoService {
                 .toList();
     }
 
-    public List<OpcionDto> ejemplaresDisponibles() {
-        return ejemplarRepository.findByEstado(EstadoEjemplar.DISPONIBLE).stream()
+    /**
+     * Ejemplares que se pueden prestar. Si se indica el usuario, se suman los que tiene apartados
+     * por una reserva lista para recoger.
+     */
+    public List<OpcionDto> ejemplaresDisponibles(Integer idUsuario) {
+        List<OpcionDto> opciones = new ArrayList<>(ejemplarRepository.findByEstado(EstadoEjemplar.DISPONIBLE).stream()
                 .map(e -> new OpcionDto(e.getIdEjemplar(), e.getCodigo() + " · " + e.getLibro().getTitulo()))
+                .toList());
+        if (idUsuario != null) {
+            for (Reserva reserva : reservaRepository.listasDeUsuario(idUsuario)) {
+                Ejemplar e = reserva.getEjemplar();
+                opciones.add(new OpcionDto(e.getIdEjemplar(),
+                        e.getCodigo() + " · " + e.getLibro().getTitulo() + " (apartado para este usuario)"));
+            }
+        }
+        return opciones.stream()
                 .sorted(Comparator.comparing(OpcionDto::getNombre, String.CASE_INSENSITIVE_ORDER))
                 .toList();
     }

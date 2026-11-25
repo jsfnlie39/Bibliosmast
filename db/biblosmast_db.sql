@@ -127,6 +127,7 @@ CREATE TABLE prestamo (
     fecha_limite     DATE NOT NULL,
     estado           ENUM('ACTIVO','FINALIZADO','VENCIDO') NOT NULL DEFAULT 'ACTIVO',
     observaciones    VARCHAR(255),
+    renovaciones     INT NOT NULL DEFAULT 0,            -- cuantas veces se ha renovado
     CONSTRAINT fk_prestamo_usuario       FOREIGN KEY (id_usuario)       REFERENCES usuario(id_usuario),
     CONSTRAINT fk_prestamo_bibliotecario FOREIGN KEY (id_bibliotecario) REFERENCES usuario(id_usuario)
 ) ENGINE=InnoDB;
@@ -141,15 +142,20 @@ CREATE TABLE detalle_prestamo (
     CONSTRAINT fk_dp_ejemplar FOREIGN KEY (id_ejemplar) REFERENCES ejemplar(id_ejemplar)
 ) ENGINE=InnoDB;
 
+-- Cola de reservas: PENDIENTE = esperando turno; LISTA = ya hay un ejemplar apartado (id_ejemplar) que el usuario
+-- debe recoger antes de fecha_limite_recogida; VENCIDA se guarda solo si una LISTA no se recogio a tiempo.
 CREATE TABLE reserva (
-    id_reserva        INT AUTO_INCREMENT PRIMARY KEY,
-    id_usuario        INT NOT NULL,
-    id_libro          INT NOT NULL,
-    fecha_reserva     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    fecha_vencimiento DATE NOT NULL,
-    estado            ENUM('PENDIENTE','ATENDIDA','CANCELADA','VENCIDA') NOT NULL DEFAULT 'PENDIENTE',
-    CONSTRAINT fk_reserva_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario),
-    CONSTRAINT fk_reserva_libro   FOREIGN KEY (id_libro)   REFERENCES libro(id_libro)
+    id_reserva            INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario            INT NOT NULL,
+    id_libro              INT NOT NULL,
+    fecha_reserva         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_vencimiento     DATE NOT NULL,
+    estado                ENUM('PENDIENTE','LISTA','ATENDIDA','CANCELADA','VENCIDA') NOT NULL DEFAULT 'PENDIENTE',
+    fecha_limite_recogida DATE NULL,
+    id_ejemplar           INT NULL,
+    CONSTRAINT fk_reserva_usuario  FOREIGN KEY (id_usuario)  REFERENCES usuario(id_usuario),
+    CONSTRAINT fk_reserva_libro    FOREIGN KEY (id_libro)    REFERENCES libro(id_libro),
+    CONSTRAINT fk_reserva_ejemplar FOREIGN KEY (id_ejemplar) REFERENCES ejemplar(id_ejemplar)
 ) ENGINE=InnoDB;
 
 CREATE TABLE multa (
@@ -308,4 +314,7 @@ INSERT INTO reserva (id_usuario, id_libro, fecha_reserva, fecha_vencimiento) VAL
 INSERT INTO configuracion (clave, valor, descripcion) VALUES
  ('multa_por_dia_retraso', 1000.00,  'Multa por cada día de retraso en la devolución (por ejemplar)'),
  ('multa_dano',            10000.00, 'Multa fija cuando un ejemplar se devuelve dañado'),
- ('multa_perdida',         30000.00, 'Multa fija cuando un ejemplar se pierde');
+ ('multa_perdida',         30000.00, 'Multa fija cuando un ejemplar se pierde'),
+ ('max_renovaciones',      2.00,     'Veces que se puede renovar un prestamo'),
+ ('dias_prestamo',         7.00,     'Dias que se agregan a la fecha limite al renovar un prestamo'),
+ ('dias_recogida_reserva', 3.00,     'Dias que tiene el usuario para recoger el ejemplar apartado por una reserva');

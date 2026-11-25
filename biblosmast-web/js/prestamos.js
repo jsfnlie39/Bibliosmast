@@ -2,6 +2,8 @@ import { api, textoError } from "./api.js";
 import { requireSesion, logout } from "./auth.js";
 import { el, vaciar, mostrarMensaje, llenarSelect } from "./dom.js";
 import { textoMultasGeneradas } from "./multas-formato.js";
+import { puedeRenovar, textoRenovaciones, textoRenovado } from "./prestamos-formato.js";
+import { textoApartado } from "./reservas-formato.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -36,15 +38,26 @@ function sumarDias(dias) {
 // ---------------- datos ----------------
 
 async function cargarOpciones() {
-    const [usuarios, ejemplares] = await Promise.all([
-        api.get("/usuarios/activos"),
-        api.get("/ejemplares/disponibles"),
-    ]);
+    const usuarios = await api.get("/usuarios/activos");
+    const usuarioForm = $("idUsuario").value;
     llenarSelect($("idUsuario"), usuarios, "Selecciona...");
+    $("idUsuario").value = usuarioForm;
     const seleccionado = $("filtroUsuario").value;
     llenarSelect($("filtroUsuario"), usuarios, "Todos los usuarios");
     $("filtroUsuario").value = seleccionado;
-    llenarSelect($("idsEjemplares"), ejemplares);
+    await cargarEjemplares();
+}
+
+/**
+ * Ejemplares que se pueden prestar. Al elegir usuario se suman los que tiene apartados por una reserva
+ * lista para recoger; los ya marcados se conservan si siguen en la lista.
+ */
+async function cargarEjemplares() {
+    const idUsuario = $("idUsuario").value;
+    const marcados = new Set([...$("idsEjemplares").selectedOptions].map((o) => o.value));
+    const ruta = idUsuario ? `/ejemplares/disponibles?idUsuario=${encodeURIComponent(idUsuario)}` : "/ejemplares/disponibles";
+    llenarSelect($("idsEjemplares"), await api.get(ruta));
+    for (const opcion of $("idsEjemplares").options) opcion.selected = marcados.has(opcion.value);
 }
 
 async function cargarPrestamos() {
@@ -96,19 +109,45 @@ function pintarTabla(prestamos) {
     vaciar(cuerpo);
 
     if (prestamos.length === 0) {
-        cuerpo.append(el("tr", {}, el("td", { colspan: 6, class: "vacio" }, "No hay préstamos para mostrar")));
+        cuerpo.append(el("tr", {}, el("td", { colspan: 8, class: "vacio" }, "No hay préstamos para mostrar")));
         return;
     }
 
     for (const p of prestamos) {
+        const acciones = el("td", { class: "acciones" });
+        if (puedeRenovar(p)) {
+            const botonRenovar = el("button", {
+                class: "btn secundario chico", type: "button",
+                onclick: () => renovar(p, botonRenovar),
+            }, "Renovar");
+            acciones.append(botonRenovar);
+        }
         cuerpo.append(el("tr", {},
             el("td", {}, p.idPrestamo),
             el("td", {}, `${p.usuario} (${p.documento})`),
             el("td", {}, formatearFechaHora(p.fechaPrestamo)),
             el("td", {}, formatearFecha(p.fechaLimite)),
             el("td", {}, etiquetaEstado(p)),
+            el("td", {}, textoRenovaciones(p.renovaciones)),
             el("td", {}, p.detalles.map((d) => itemDetalle(p, d))),
+            acciones,
         ));
+    }
+}
+
+// ---------------- renovacion ----------------
+
+async function renovar(prestamo, boton) {
+    if (!window.confirm(`¿Renovar el préstamo N° ${prestamo.idPrestamo} de ${prestamo.usuario}?`)) return;
+    boton.disabled = true;
+    try {
+        const respuesta = await api.put(`/prestamos/${prestamo.idPrestamo}/renovar`, {});
+        mostrarMensaje($("mensaje"), textoRenovado(respuesta), "ok");
+        await cargarPrestamos();
+    } catch (error) {
+        // 409: multas pendientes, reserva de otra persona, máximo de renovaciones, vencido o ya devuelto
+        mostrarMensaje($("mensaje"), textoError(error));
+        boton.disabled = false;
     }
 }
 
@@ -121,7 +160,7 @@ async function devolver(prestamo, detalle, estadoDevolucion, boton) {
             `/prestamos/${prestamo.idPrestamo}/detalles/${detalle.idDetalle}/devolucion`,
             { estadoDevolucion },
         );
-        mostrarMensaje($("mensaje"), `Ejemplar ${detalle.codigo} devuelto.${textoMultasGeneradas(respuesta)}`, "ok");
+        mostrarMensaje($("mensaje"), `Ejemplar ${detalle.codigo} devuelto.${textoMultasGeneradas(respuesta)}${textoApartado(respuesta)}`, "ok");
         await Promise.all([cargarPrestamos(), cargarOpciones()]);
     } catch (error) {
         mostrarMensaje($("mensaje"), textoError(error));
@@ -134,6 +173,7 @@ async function devolver(prestamo, detalle, estadoDevolucion, boton) {
 function abrirFormulario() {
     mostrarMensaje($("mensajeForm"), "");
     $("frmPrestamo").reset();
+    cargarEjemplares().catch(() => {}); // tras reset(): sin usuario elegido, solo los disponibles
     $("fechaLimite").min = aTextoFecha(sumarDias(1));
     $("fechaLimite").value = aTextoFecha(sumarDias(DIAS_PRESTAMO_POR_DEFECTO));
     $("dlgPrestamo").showModal();
@@ -184,6 +224,7 @@ async function iniciar() {
     $("btnNuevo").addEventListener("click", abrirFormulario);
     $("btnCancelar").addEventListener("click", () => $("dlgPrestamo").close());
     $("frmPrestamo").addEventListener("submit", guardar);
+    $("idUsuario").addEventListener("change", () => cargarEjemplares().catch((e) => mostrarMensaje($("mensajeForm"), textoError(e))));
     $("filtroEstado").addEventListener("change", cargarPrestamos);
     $("filtroUsuario").addEventListener("change", cargarPrestamos);
 

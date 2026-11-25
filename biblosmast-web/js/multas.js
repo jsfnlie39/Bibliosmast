@@ -20,7 +20,8 @@ function formatearFechaHora(iso) {
 // ---------------- valores de las multas (solo ADMIN) ----------------
 
 async function cargarValores() {
-    const valores = await api.get("/configuracion");
+    // La configuración también guarda las reglas de renovación; aquí solo van los valores de las multas
+    const valores = (await api.get("/configuracion")).filter((v) => v.clave.startsWith("multa_"));
     const contenedor = $("camposValores");
     vaciar(contenedor);
 
