@@ -46,7 +46,7 @@ test("el menú depende del rol", () => {
     pagina("libros"); document.querySelector(".app")?.remove(); montarLayout(sesion("BIBLIOTECARIO"));
     assert.deepEqual(enlaces(), ["Inicio", "Libros", "Ejemplares", "Préstamos", "Reservas", "Multas", "Autores y catálogos", "Mi perfil"]);
     pagina("libros"); montarLayout(sesion("USUARIO"));
-    assert.deepEqual(enlaces(), ["Inicio", "Libros", "Mi perfil"]);
+    assert.deepEqual(enlaces(), ["Inicio", "Libros", "Mi cuenta", "Mi perfil"]);
 });
 
 test("el avatar lleva a Mi perfil", () => {

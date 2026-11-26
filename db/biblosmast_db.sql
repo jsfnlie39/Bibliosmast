@@ -317,4 +317,5 @@ INSERT INTO configuracion (clave, valor, descripcion) VALUES
  ('multa_perdida',         30000.00, 'Multa fija cuando un ejemplar se pierde'),
  ('max_renovaciones',      2.00,     'Veces que se puede renovar un prestamo'),
  ('dias_prestamo',         7.00,     'Dias que se agregan a la fecha limite al renovar un prestamo'),
- ('dias_recogida_reserva', 3.00,     'Dias que tiene el usuario para recoger el ejemplar apartado por una reserva');
+ ('dias_recogida_reserva', 3.00,     'Dias que tiene el usuario para recoger el ejemplar apartado por una reserva'),
+ ('dias_vigencia_reserva', 14.00,    'Dias que vale una reserva que el usuario hace desde Mi cuenta');

@@ -47,9 +47,12 @@ public class AuditoriaInterceptor implements HandlerInterceptor {
 
         try {
             String[] partes = ruta.split("/");               // ["", "api", "libros", "5", ...]
-            String recurso = partes.length > 2 ? partes[2] : "";
-            Integer idRegistro = (partes.length > 3 && partes[3].matches("\\d{1,9}")) ? Integer.valueOf(partes[3]) : null;
-            String accion = ruta.endsWith("/devolucion") ? "DEVOLUCION"
+            // «Mi cuenta» cuelga de /api/mi-cuenta/{recurso}/{id}: se corre un lugar para auditar el recurso de verdad
+            int base = (partes.length > 3 && "mi-cuenta".equals(partes[2])) ? 3 : 2;
+            String recurso = partes.length > base ? partes[base] : "";
+            Integer idRegistro = (partes.length > base + 1 && partes[base + 1].matches("\\d{1,9}")) ? Integer.valueOf(partes[base + 1]) : null;
+            String accion = ruta.endsWith("/cancelar") ? "CANCELAR"
+                    : ruta.endsWith("/devolucion") ? "DEVOLUCION"
                     : ruta.endsWith("/pago") ? "PAGO"
                     : ruta.endsWith("/renovar") ? "RENOVACION"
                     : "POST".equals(metodo) ? "CREAR"

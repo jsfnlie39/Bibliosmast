@@ -53,6 +53,8 @@ public class SeguridadWebConfig {
                         .antMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**").permitAll()
                         // Cada persona ve y edita su propio perfil (la persona sale del token)
                         .antMatchers("/api/perfil/**").authenticated()
+                        // «Mi cuenta»: cada persona ve y mueve solo lo suyo (la persona sale del token)
+                        .antMatchers("/api/mi-cuenta/**").authenticated()
                         // Auditoría y valores de las multas: solo ADMIN
                         .antMatchers("/api/auditoria/**", "/api/configuracion/**").hasRole(ADMIN)
                         // Cualquier usuario con sesión puede consultar el catálogo de libros

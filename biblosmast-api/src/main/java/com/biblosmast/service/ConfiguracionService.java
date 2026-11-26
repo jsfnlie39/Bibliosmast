@@ -24,6 +24,7 @@ public class ConfiguracionService implements IConfiguracionService {
     public static final String CLAVE_MAX_RENOVACIONES = "max_renovaciones";
     public static final String CLAVE_DIAS_PRESTAMO = "dias_prestamo";
     public static final String CLAVE_DIAS_RECOGIDA = "dias_recogida_reserva";
+    public static final String CLAVE_DIAS_VIGENCIA_RESERVA = "dias_vigencia_reserva";
 
     private final ConfiguracionRepository configuracionRepository;
 

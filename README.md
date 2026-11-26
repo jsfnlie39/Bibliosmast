@@ -55,6 +55,10 @@ Endpoints (etapas 1, 2 y 3):
 | POST | `/api/prestamos` | Registrar préstamo (201). Body: `idUsuario`, `idBibliotecario`, `fechaLimite`, `idsEjemplares` (máx. 5), `observaciones` |
 | PUT | `/api/prestamos/{id}/detalles/{idDetalle}/devolucion` | Devolver un ejemplar. Body `{ "estadoDevolucion": "BUEN_ESTADO\|DANADO\|PERDIDO" }` |
 | PUT | `/api/prestamos/{id}/renovar` | Renovar un préstamo (sin body). Devuelve el préstamo con la nueva fecha límite; 409 si no se puede renovar. Se audita como `RENOVACION` |
+| GET | `/api/mi-cuenta` | Cualquier usuario con sesión: sus préstamos, reservas y multas (siempre las del token) y el total de multas pendientes |
+| POST | `/api/mi-cuenta/reservas` | Reservar un libro para quien tiene la sesión. Body `{"idLibro": 5}`. El vencimiento lo fija `dias_vigencia_reserva` (14 de ejemplo). Mismas reglas de la cola que las reservas del personal |
+| PUT | `/api/mi-cuenta/reservas/{id}/cancelar` | Cancelar una reserva propia (pendiente o lista para recoger; si estaba lista, el ejemplar pasa a la siguiente persona). 404 si es de otra persona |
+| PUT | `/api/mi-cuenta/prestamos/{id}/renovar` | Renovar un préstamo propio (mismas reglas de siempre). 404 si es de otra persona |
 | GET | `/api/reservas?estado=PENDIENTE\|LISTA\|VENCIDA\|ATENDIDA\|CANCELADA&idUsuario=` | Listar reservas (filtros opcionales). Trae `posicionCola` (turno en la cola), y en las LISTA `fechaLimiteRecogida` y `codigoEjemplar`. Antes de listar se liberan los ejemplares que nadie recogió a tiempo |
 | GET | `/api/reservas/{id}` | Consultar una reserva |
 | POST | `/api/reservas` | Crear (201). Body: `idUsuario`, `idLibro`, `fechaVencimiento`. Siempre queda PENDIENTE (en cola). 409 si el libro tiene ejemplares disponibles o ninguno prestado |
@@ -79,7 +83,7 @@ npm run dev        # abre http://localhost:5173
 | Comando | Qué hace |
 |---|---|
 | `npm run dev` | Servidor de desarrollo en `http://localhost:5173` (ya está permitido en CORS) |
-| `npm test` | 64 pruebas automáticas (sesión y token, cierre de sesión, clave temporal, registro, recuperación, tablas, panel, menú, tema, multas, renovación, cola de reservas) |
+| `npm test` | 70 pruebas automáticas (sesión y token, cierre de sesión, clave temporal, registro, recuperación, tablas, panel, menú, tema, multas, renovación, cola de reservas, Mi cuenta) |
 | `npm run build` | Genera la carpeta `dist/` lista para publicar |
 
 Si la API cambia de puerto, editar `js/config.js`.
@@ -115,6 +119,7 @@ Flujo sugerido para dos personas: una rama por módulo (`feature/libros`, `featu
   - [x] Multas por retraso, daño o pérdida
   - [x] Reservas (con cola: la reserva pasa a «Lista para recoger» al devolverse un ejemplar)
   - [x] Auditoría
+  - [x] Mi cuenta (rol USUARIO: sus préstamos, reservas y multas; reservar y renovar)
 
 ## Cómo funciona el préstamo
 - Solo ADMIN y BIBLIOTECARIO entran al módulo. El préstamo lo registra la persona que inició sesión.
@@ -192,6 +197,28 @@ Los dos valores están en la tabla `configuracion`. No aparecen en la pantalla d
 3. Prestar `LIB-0002-A` (*Clean Code*, un solo ejemplar) a `carlos`; crear una reserva vigente de `laura` para *Clean Code* (ahora se puede porque no queda ejemplar libre) y renovar el préstamo de `carlos`: 409 «otra persona tiene reservado alguno de estos libros». Cancelar la reserva y renovar: funciona.
 4. Dar a un usuario una multa pendiente (devolver un ejemplar tarde en otro préstamo) e intentar renovar su préstamo activo: 409 «multas pendientes».
 5. Intentar renovar un préstamo finalizado: 409. Un préstamo vencido: 409 (los de prueba traen la fecha límite en el futuro; para probarlo hay que cambiar `fecha_limite` en la base).
+
+## Mi cuenta (rol USUARIO)
+
+`mi-cuenta.html` (aparece en el menú lateral y en Inicio solo para el rol USUARIO): la persona ve sus préstamos, sus reservas con el turno en la cola y sus multas.
+- Puede **renovar** sus préstamos activos y **cancelar** sus reservas pendientes o listas para recoger. Si cancela una reserva lista, el ejemplar apartado pasa a la siguiente persona de la cola (o queda DISPONIBLE).
+- Puede **reservar** un libro: desde «Mi cuenta» (lista de libros sin ejemplares disponibles) o con el botón «Reservar» de la pantalla Libros, que solo aparece si el libro no tiene ejemplares disponibles. Rigen las mismas reglas de la cola que para el personal (409 si hay ejemplar libre o si ya tiene una reserva abierta de ese libro).
+- Una reserva lista para recoger muestra el plazo (`fechaLimiteRecogida`) y el código del ejemplar apartado.
+- Si tiene multas pendientes, la pantalla lo avisa arriba. Las multas las paga y registra el personal, no el usuario.
+- La seguridad: `/api/mi-cuenta/**` pide sesión y **siempre usa la persona del token**; el navegador nunca manda un id de usuario. Una reserva o un préstamo de otra persona responde 404 como si no existiera.
+- Las acciones quedan en Auditoría (`CREAR` de una reserva, `CANCELAR`, `RENOVACION`).
+
+**Hay que volver a ejecutar `biblosmast_db.sql`** (clave nueva `dias_vigencia_reserva`, además de lo de la cola).
+
+**Pruebas de Mi cuenta**
+1. Entrar con `carlos` (USUARIO): el menú lateral muestra «Mi cuenta» y no muestra Préstamos ni Reservas. Con `admin` no aparece «Mi cuenta».
+2. Con `biblio`, registrar un préstamo para `carlos`. En «Mi cuenta» de `carlos` aparece el préstamo; pulsar «Renovar» sube la fecha límite y la columna Renovaciones.
+3. Con `laura`, en Libros el libro prestado (si solo tenía un ejemplar) muestra el botón «Reservar»; un libro con ejemplares disponibles no lo muestra. Reservar: en «Mi cuenta» de `laura` sale la reserva con «Vas en el lugar 1 de la cola».
+4. Con Swagger y el token de `laura`, `PUT /api/mi-cuenta/reservas/{id}/cancelar` con el id de una reserva de `carlos`: 404. `GET /api/mi-cuenta` solo trae lo de `laura`.
+5. Cancelar la reserva desde «Mi cuenta»: queda Cancelada y Auditoría registra `CANCELAR`.
+6. Con `biblio`, devolver en buen estado el ejemplar del libro que `laura` tiene reservado: en «Mi cuenta» de `laura` la reserva queda «Lista para recoger» con «hasta (hoy + 3 días)» y el código del ejemplar. Cancelarla desde «Mi cuenta»: el ejemplar vuelve a `Disponible` (si nadie más esperaba).
+7. Con `biblio`, dar a `carlos` una multa (devolver un ejemplar dañado): al entrar `carlos` ve el aviso rojo con el total pendiente y no puede renovar (409).
+8. Reservar un libro que sí tiene ejemplares disponibles (con Swagger): 409.
 
 ## Usuarios y roles
 - Solo ADMIN entra al módulo. Crear un usuario crea a la vez su cuenta (usuario, contraseña cifrada y rol).

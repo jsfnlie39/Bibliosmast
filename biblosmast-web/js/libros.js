@@ -46,6 +46,10 @@ function pintarTabla() {
 
     for (const libro of libros) {
         const acciones = el("td", { class: "acciones" });
+        if (!puedeEditar && libro.estado === "ACTIVO" && libro.totalEjemplares > 0 && libro.ejemplaresDisponibles === 0) {
+            // Sin ejemplares disponibles: quien consulta como usuario se puede poner en la cola de reservas
+            acciones.append(el("button", { class: "btn secundario chico", type: "button", onclick: () => reservar(libro) }, "Reservar"));
+        }
         if (puedeEditar) {
             acciones.append(
                 el("button", { class: "btn secundario chico", type: "button", onclick: () => abrirFormulario(libro) }, "Editar"),
@@ -125,6 +129,16 @@ async function guardar(evento) {
         mostrarMensaje($("mensajeForm"), textoError(error));
     } finally {
         boton.disabled = false;
+    }
+}
+
+async function reservar(libro) {
+    if (!window.confirm(`¿Reservar "${libro.titulo}"? Quedarás en la cola de reservas.`)) return;
+    try {
+        await api.post("/mi-cuenta/reservas", { idLibro: libro.idLibro });
+        mostrarMensaje($("mensaje"), "Reserva registrada. Puedes ver tu lugar en la cola en «Mi cuenta».", "ok");
+    } catch (error) {
+        mostrarMensaje($("mensaje"), textoError(error));
     }
 }
 

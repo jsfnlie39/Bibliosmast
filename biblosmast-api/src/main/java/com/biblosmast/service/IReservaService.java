@@ -10,5 +10,7 @@ public interface IReservaService {
     ReservaResponse obtener(Integer id);
     ReservaResponse crear(ReservaRequest request);
     ReservaResponse actualizar(Integer id, ReservaRequest request);
+    /** Cancela una reserva PENDIENTE o LISTA (si estaba lista, el ejemplar apartado pasa a la siguiente persona de la cola). */
+    ReservaResponse cancelar(Integer id);
     void eliminar(Integer id);
 }

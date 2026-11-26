@@ -156,6 +156,20 @@ public class ReservaService implements IReservaService {
 
     @Override
     @Transactional
+    public ReservaResponse cancelar(Integer id) {
+        colaReservas.vencerListas();
+        Reserva reserva = buscarOFalla(id);
+        if (reserva.getEstado() != EstadoReserva.PENDIENTE && reserva.getEstado() != EstadoReserva.LISTA) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Solo se puede cancelar una reserva pendiente o lista para recoger");
+        }
+        // Si estaba LISTA, cerrar() libera el ejemplar apartado y se lo pasa al siguiente de la cola
+        colaReservas.cerrar(reserva, EstadoReserva.CANCELADA);
+        return respuesta(reserva);
+    }
+
+    @Override
+    @Transactional
     public void eliminar(Integer id) {
         Reserva reserva = buscarOFalla(id);
         if (reserva.getEstado() == EstadoReserva.LISTA) {

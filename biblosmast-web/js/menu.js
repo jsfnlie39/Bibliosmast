@@ -21,6 +21,9 @@ function iniciar() {
     mostrarToken(sesion);
     cargarPanel(sesion).catch(() => {}); // indicadores y graficos; si fallan, el resto de la pagina sigue funcionando
 
+    // Mi cuenta: para quien consulta como usuario (el personal gestiona todo desde sus módulos)
+    if (sesion.rol !== "USUARIO") document.getElementById("modMiCuenta").remove();
+
     // Catalogos, ejemplares, prestamos, reservas y multas: solo para el personal de la biblioteca
     if (!["ADMIN", "BIBLIOTECARIO"].includes(sesion.rol)) {
         for (const id of ["modCatalogos", "modEjemplares", "modPrestamos", "modReservas", "modMultas"]) {

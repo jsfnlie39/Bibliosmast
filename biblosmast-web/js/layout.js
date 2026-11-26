@@ -17,6 +17,7 @@ const MENU = [
     { id: "catalogos", href: "catalogos.html", texto: "Autores y catálogos", roles: PERSONAL },
     { id: "usuarios", href: "usuarios.html", texto: "Usuarios", roles: ["ADMIN"] },
     { id: "auditoria", href: "auditoria.html", texto: "Auditoría", roles: ["ADMIN"] },
+    { id: "mi-cuenta", href: "mi-cuenta.html", texto: "Mi cuenta", roles: ["USUARIO"] },
     { id: "perfil", href: "perfil.html", texto: "Mi perfil", roles: null },
 ];
 

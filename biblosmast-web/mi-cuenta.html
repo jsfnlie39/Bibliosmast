@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Mi cuenta</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-pagina="mi-cuenta">
+    <main class="contenedor">
+        <h1>Mi cuenta</h1>
+        <p class="nota">Tus préstamos, reservas y multas. Los préstamos y las multas los registra el personal de la biblioteca.</p>
+        <div id="mensaje" class="mensaje" hidden role="status"></div>
+        <div id="avisoMultas" class="mensaje error" hidden role="alert"></div>
+
+        <h2 class="seccion-titulo">Mis préstamos</h2>
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr><th>Libros</th><th>Fecha límite</th><th>Estado</th><th>Renovaciones</th><th></th></tr>
+                </thead>
+                <tbody id="tbodyPrestamos"></tbody>
+            </table>
+        </div>
+
+        <h2 class="seccion-titulo">Mis reservas</h2>
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr><th>Libro</th><th>Estado</th><th>Situación</th><th></th></tr>
+                </thead>
+                <tbody id="tbodyReservas"></tbody>
+            </table>
+        </div>
+
+        <h2 class="seccion-titulo">Reservar un libro</h2>
+        <p class="nota">Aquí aparecen los libros que no tienen ejemplares disponibles. Si un libro está disponible, pídelo directamente en la biblioteca. Las reservas forman una cola: cuando devuelvan un ejemplar, el primero de la cola puede recogerlo.</p>
+        <div class="herramientas">
+            <select id="idLibro" aria-label="Libro a reservar"></select>
+            <button id="btnReservar" class="btn" type="button">Reservar</button>
+        </div>
+
+        <h2 class="seccion-titulo">Mis multas</h2>
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr><th>Fecha</th><th>Motivo</th><th>Valor</th><th>Estado</th></tr>
+                </thead>
+                <tbody id="tbodyMultas"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script type="module" src="js/mi-cuenta.js"></script>
+</body>
+</html>
