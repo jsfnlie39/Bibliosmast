@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Reportes</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-pagina="reportes">
+    <main class="contenedor">
+        <h1>Reportes</h1>
+        <p class="nota">Cada tabla se puede ordenar y descargar en CSV con el botón de la tabla. El periodo aplica a «libros más prestados» y «usuarios con más retrasos»; si no pones fechas, son los últimos 12 meses.</p>
+        <div id="mensaje" class="mensaje" hidden role="status"></div>
+
+        <form id="frmReportes" class="herramientas" novalidate>
+            <label for="desde">Desde</label>
+            <input id="desde" type="date">
+            <label for="hasta">Hasta</label>
+            <input id="hasta" type="date">
+            <label for="limite">Mostrar</label>
+            <select id="limite">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+            <label for="meses">Meses</label>
+            <select id="meses">
+                <option value="6">6</option>
+                <option value="12" selected>12</option>
+                <option value="24">24</option>
+            </select>
+            <button id="btnActualizar" class="btn" type="submit">Actualizar</button>
+        </form>
+
+        <section class="grafico-tarjeta">
+            <h2>Préstamos por mes</h2>
+            <div class="grafico-caja"><canvas id="grafMeses" role="img" aria-label="Gráfico de préstamos por mes"></canvas></div>
+        </section>
+        <div class="tabla-wrap">
+            <table>
+                <thead><tr><th>Mes</th><th>Préstamos</th></tr></thead>
+                <tbody id="tbodyMeses"></tbody>
+            </table>
+        </div>
+
+        <section class="grafico-tarjeta">
+            <h2>Libros más prestados</h2>
+            <div class="grafico-caja"><canvas id="grafLibros" role="img" aria-label="Gráfico de libros más prestados"></canvas></div>
+        </section>
+        <div class="tabla-wrap">
+            <table>
+                <thead><tr><th>Libro</th><th>Veces prestado</th></tr></thead>
+                <tbody id="tbodyLibros"></tbody>
+            </table>
+        </div>
+
+        <section class="grafico-tarjeta">
+            <h2>Usuarios con más retrasos</h2>
+            <div class="grafico-caja"><canvas id="grafRetrasos" role="img" aria-label="Gráfico de usuarios con más retrasos"></canvas></div>
+        </section>
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr><th>Usuario</th><th>Documento</th><th>Multas por retraso</th><th>Valor de las multas</th><th>Vencidos ahora</th></tr>
+                </thead>
+                <tbody id="tbodyRetrasos"></tbody>
+            </table>
+        </div>
+        <p class="nota">«Vencidos ahora» son ejemplares que la persona tiene sin devolver con la fecha límite pasada: todavía no tienen multa, porque el retraso se cobra al devolver.</p>
+    </main>
+    <script type="module" src="js/reportes.js"></script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Mi cuenta</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-pagina="cuenta">
+    <main class="contenedor">
+        <div class="encabezado-pagina">
+            <h1>Mi cuenta</h1>
+            <p>Tus préstamos, reservas y multas. Aquí solo ves lo tuyo.</p>
+        </div>
+
+        <div id="mensaje" class="mensaje" hidden role="status"></div>
+        <div id="avisoListas" class="mensaje ok" hidden role="status"></div>
+
+        <section class="panel">
+            <h2>Resumen</h2>
+            <dl class="datos">
+                <dt>Préstamos sin devolver</dt><dd id="resPrestamos">—</dd>
+                <dt>Reservas abiertas</dt><dd id="resReservas">—</dd>
+                <dt>Multas por pagar</dt><dd id="resMultas">—</dd>
+            </dl>
+        </section>
+
+        <h2>Mis préstamos</h2>
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr><th>Fecha</th><th>Devolver antes del</th><th>Estado</th><th>Renovaciones</th><th>Libros</th></tr>
+                </thead>
+                <tbody id="tbodyPrestamos"></tbody>
+            </table>
+        </div>
+        <p class="nota">Para devolver o renovar un préstamo, acércate a la biblioteca.</p>
+
+        <h2>Mis reservas</h2>
+        <form id="frmReservar" class="herramientas" novalidate>
+            <select id="idLibro" aria-label="Libro a reservar" required></select>
+            <button id="btnReservar" class="btn" type="submit">Reservar</button>
+        </form>
+        <p class="nota">Solo aparecen los libros que no tienen ningún ejemplar disponible. Entras a la cola por orden de llegada; cuando te toque, el ejemplar queda apartado para ti unos días y la reserva pasa a «Lista para recoger».</p>
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr><th>Libro</th><th>Reservada</th><th>Vence</th><th>Estado</th><th>Turno / recogida</th><th></th></tr>
+                </thead>
+                <tbody id="tbodyReservas"></tbody>
+            </table>
+        </div>
+
+        <h2>Mis multas</h2>
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr><th>Fecha</th><th>Motivo</th><th>Valor</th><th>Estado</th></tr>
+                </thead>
+                <tbody id="tbodyMultas"></tbody>
+            </table>
+        </div>
+        <p class="nota">Las multas se pagan en la biblioteca. Mientras tengas multas pendientes no puedes recibir nuevos préstamos.</p>
+    </main>
+    <script type="module" src="js/mi-cuenta.js"></script>
+</body>
+</html>

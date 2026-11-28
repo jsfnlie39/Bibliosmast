@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Nueva contraseña</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="login-pagina">
+    <section class="login-lado" aria-hidden="true">
+        <h2>Biblosmast</h2>
+        <p>Elige una contraseña nueva para tu cuenta.</p>
+    </section>
+
+    <main class="login-form">
+        <div class="tarjeta">
+            <h1>Nueva contraseña</h1>
+            <p class="sub">El enlace funciona una sola vez</p>
+            <div id="mensaje" class="mensaje error" hidden role="alert"></div>
+
+            <form id="frmRestablecer" novalidate>
+                <div class="campo">
+                    <label for="claveNueva">Nueva contraseña</label>
+                    <input id="claveNueva" type="password" minlength="8" maxlength="72" autocomplete="new-password" required autofocus>
+                </div>
+                <div class="campo">
+                    <label for="claveConfirmar">Repite la contraseña</label>
+                    <input id="claveConfirmar" type="password" maxlength="72" autocomplete="new-password" required>
+                </div>
+                <p class="nota">Mínimo 8 caracteres.</p>
+                <button id="btnRestablecer" class="btn bloque" type="submit">Cambiar contraseña</button>
+            </form>
+            <p class="enlaces-login"><a href="index.html">Ir a iniciar sesión</a></p>
+        </div>
+    </main>
+    <script type="module" src="js/restablecer.js"></script>
+</body>
+</html>
