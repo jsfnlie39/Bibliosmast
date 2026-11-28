@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Ficha del ejemplar</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-pagina="ejemplares">
+    <main class="contenedor">
+        <p><a class="ficha-vinculo" href="ejemplares.html">← Volver a Ejemplares</a></p>
+        <h1 id="titulo">Ficha del ejemplar</h1>
+        <div id="mensaje" class="mensaje" hidden role="status"></div>
+
+        <section class="panel">
+            <h2>Seguimiento de esta copia</h2>
+            <dl class="datos">
+                <dt>Libro</dt><dd id="dLibro">—</dd>
+                <dt>Ubicación</dt><dd id="dUbicacion">—</dd>
+                <dt>Estado actual</dt><dd id="dEstado">—</dd>
+                <dt>Ingreso</dt><dd id="dIngreso">—</dd>
+                <dt>Veces prestado</dt><dd id="dPrestamos">—</dd>
+                <dt>Cómo ha vuelto</dt><dd id="dCondicion">—</dd>
+            </dl>
+        </section>
+
+        <h2>Historial de esta copia</h2>
+        <p class="nota">Cada vez que se prestó este ejemplar: a quién, cuándo y cómo volvió (con la observación que se anotó al devolverlo).</p>
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr><th>Fecha</th><th>Usuario</th><th>Devolver antes del</th><th>Devuelto</th><th>Situación</th><th>Observación</th></tr>
+                </thead>
+                <tbody id="tbodyPrestamos"></tbody>
+            </table>
+        </div>
+    </main>
+    <script type="module" src="js/ficha-ejemplar.js"></script>
+</body>
+</html>

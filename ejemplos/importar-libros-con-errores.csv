@@ -1,0 +1,8 @@
+﻿isbn;titulo;autores;categoria;editorial;anio;idioma;edicion;paginas;descripcion
+9780000000059;Libro correcto;Carl Sagan;Ciencia;Alfaguara;1990;Español;;200;
+9780132350884;Clean Code repetido;Robert C. Martin;Tecnología;Prentice Hall;2008;Inglés;;464;
+9780000000066;;Gabriel García Márquez;Novela;Sudamericana;1970;Español;;100;
+9780000000073;Categoría inexistente;Carl Sagan;Poesía;Alfaguara;1990;Español;;100;
+9780000000080;Autor inexistente;Pablo Neruda;Novela;Sudamericana;1990;Español;;100;
+9780000000097;Año imposible;Carl Sagan;Ciencia;Alfaguara;3000;Español;;100;
+9780000000059;ISBN repetido en el archivo;Carl Sagan;Ciencia;Alfaguara;1991;Español;;100;
