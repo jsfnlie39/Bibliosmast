@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Ficha del usuario</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-pagina="usuarios">
+    <main class="contenedor">
+        <p><a class="ficha-vinculo" id="volver" href="prestamos.html">← Volver</a></p>
+        <h1 id="titulo">Ficha del usuario</h1>
+        <div id="mensaje" class="mensaje" hidden role="status"></div>
+
+        <section class="panel">
+            <h2>Datos</h2>
+            <dl class="datos">
+                <dt>Documento</dt><dd id="dDocumento">—</dd>
+                <dt>Correo</dt><dd id="dEmail">—</dd>
+                <dt>Teléfono</dt><dd id="dTelefono">—</dd>
+                <dt>Rol</dt><dd id="dRol">—</dd>
+                <dt>Estado</dt><dd id="dEstado">—</dd>
+                <dt>Registrado</dt><dd id="dRegistro">—</dd>
+            </dl>
+        </section>
+
+        <section class="panel">
+            <h2>Reglas de su tipo</h2>
+            <dl class="datos">
+                <dt>Tipo de usuario</dt><dd id="dTipo">—</dd>
+                <dt>Libros sin devolver</dt><dd id="dCupo">—</dd>
+                <dt>Multas por pagar</dt><dd id="dMultas">—</dd>
+            </dl>
+        </section>
+
+        <h2>Préstamos</h2>
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr><th>Fecha</th><th>Devolver antes del</th><th>Estado</th><th>Renovaciones</th><th>Libros</th></tr>
+                </thead>
+                <tbody id="tbodyPrestamos"></tbody>
+            </table>
+        </div>
+
+        <h2>Reservas</h2>
+        <div class="tabla-wrap">
+            <table>
+                <thead><tr><th>Libro</th><th>Reservada</th><th>Vence</th><th>Estado</th><th>Turno / recogida</th></tr></thead>
+                <tbody id="tbodyReservas"></tbody>
+            </table>
+        </div>
+
+        <h2>Multas</h2>
+        <div class="tabla-wrap">
+            <table>
+                <thead><tr><th>Fecha</th><th>Motivo</th><th>Valor</th><th>Estado</th></tr></thead>
+                <tbody id="tbodyMultas"></tbody>
+            </table>
+        </div>
+    </main>
+    <script type="module" src="js/ficha-usuario.js"></script>
+</body>
+</html>

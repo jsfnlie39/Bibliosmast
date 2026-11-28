@@ -1,0 +1,20 @@
+# Java / Maven / STS
+target/
+.settings/
+.classpath
+.project
+.factorypath
+.springBeans
+bin/
+*.log
+# Secretos locales
+.env
+application-local.properties
+# VS Code / SO
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+dist/

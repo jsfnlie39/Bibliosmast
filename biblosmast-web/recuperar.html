@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Recuperar contraseña</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="login-pagina">
+    <section class="login-lado" aria-hidden="true">
+        <h2>Biblosmast</h2>
+        <p>Te enviaremos un enlace para elegir una contraseña nueva.</p>
+    </section>
+
+    <main class="login-form">
+        <div class="tarjeta">
+            <h1>Recuperar contraseña</h1>
+            <p class="sub">Escribe el correo de tu cuenta</p>
+            <div id="mensaje" class="mensaje error" hidden role="alert"></div>
+
+            <form id="frmRecuperar" novalidate>
+                <div class="campo">
+                    <label for="correo">Correo</label>
+                    <input id="correo" type="email" maxlength="120" autocomplete="email" required autofocus>
+                </div>
+                <button id="btnRecuperar" class="btn bloque" type="submit">Enviar enlace</button>
+            </form>
+            <p class="enlaces-login"><a href="index.html">Volver a iniciar sesión</a></p>
+        </div>
+    </main>
+    <script type="module" src="js/recuperar.js"></script>
+</body>
+</html>

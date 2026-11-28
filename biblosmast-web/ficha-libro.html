@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Ficha del libro</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-pagina="libros">
+    <main class="contenedor">
+        <p><a class="ficha-vinculo" href="libros.html">← Volver a Libros</a></p>
+        <h1 id="titulo">Ficha del libro</h1>
+        <div id="mensaje" class="mensaje" hidden role="status"></div>
+
+        <section class="panel">
+            <h2>Datos</h2>
+            <dl class="datos">
+                <dt>ISBN</dt><dd id="dIsbn">—</dd>
+                <dt>Autor(es)</dt><dd id="dAutores">—</dd>
+                <dt>Categoría</dt><dd id="dCategoria">—</dd>
+                <dt>Editorial</dt><dd id="dEditorial">—</dd>
+                <dt>Año / idioma</dt><dd id="dAnio">—</dd>
+                <dt>Estado</dt><dd id="dEstado">—</dd>
+                <dt>Ejemplares</dt><dd id="dEjemplares">—</dd>
+                <dt>Veces prestado</dt><dd id="dPrestamos">—</dd>
+            </dl>
+        </section>
+
+        <h2>Ejemplares</h2>
+        <div class="tabla-wrap">
+            <table>
+                <thead><tr><th>Código</th><th>Ubicación</th><th>Estado</th><th>Ingreso</th></tr></thead>
+                <tbody id="tbodyEjemplares"></tbody>
+            </table>
+        </div>
+
+        <h2>Historial de préstamos</h2>
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr><th>Fecha</th><th>Usuario</th><th>Ejemplar</th><th>Devolver antes del</th><th>Devuelto</th><th>Situación</th></tr>
+                </thead>
+                <tbody id="tbodyPrestamos"></tbody>
+            </table>
+        </div>
+
+        <h2>Reservas</h2>
+        <div class="tabla-wrap">
+            <table>
+                <thead><tr><th>Usuario</th><th>Reservada</th><th>Estado</th><th>Turno / recogida</th></tr></thead>
+                <tbody id="tbodyReservas"></tbody>
+            </table>
+        </div>
+    </main>
+    <script type="module" src="js/ficha-libro.js"></script>
+</body>
+</html>

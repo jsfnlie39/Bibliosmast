@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblosmast | Tipos de usuario</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-pagina="tipos">
+    <main class="contenedor">
+        <h1>Tipos de usuario</h1>
+        <p class="nota">Cada usuario tiene un tipo que define cuántos libros puede tener sin devolver, por cuántos días se presta cada libro (también lo que suma cada renovación) y cuántas veces puede renovar. El tipo EXTERNO lo reciben quienes se registran solos: no se puede renombrar ni eliminar. El cambio aplica a los préstamos nuevos y a las renovaciones; los préstamos ya hechos conservan su fecha límite.</p>
+        <div id="mensaje" class="mensaje" hidden role="status"></div>
+
+        <div class="herramientas">
+            <button id="btnNuevo" class="btn" type="button">+ Nuevo tipo</button>
+        </div>
+
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tipo</th><th>Máx. libros</th><th>Días de préstamo</th><th>Máx. renovaciones</th>
+                        <th>Usuarios</th><th></th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyTipos"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <dialog id="dlgTipo">
+        <h2 id="tituloDialogo">Nuevo tipo</h2>
+        <div id="mensajeForm" class="mensaje error" hidden role="alert"></div>
+        <form id="frmTipo" novalidate>
+            <div class="campo">
+                <label for="nombre">Nombre *</label>
+                <input id="nombre" type="text" maxlength="30" required>
+                <small class="ayuda">Se guarda en mayúsculas (por ejemplo, ESTUDIANTE).</small>
+            </div>
+            <div class="fila">
+                <div class="campo">
+                    <label for="maxLibros">Máx. libros sin devolver *</label>
+                    <input id="maxLibros" type="number" min="1" max="20" step="1" required>
+                </div>
+                <div class="campo">
+                    <label for="diasPrestamo">Días de préstamo *</label>
+                    <input id="diasPrestamo" type="number" min="1" max="90" step="1" required>
+                </div>
+            </div>
+            <div class="campo">
+                <label for="maxRenovaciones">Máx. renovaciones por préstamo *</label>
+                <input id="maxRenovaciones" type="number" min="0" max="10" step="1" required>
+                <small class="ayuda">Con 0 el tipo no puede renovar.</small>
+            </div>
+
+            <div class="dialogo-botones">
+                <button id="btnCancelar" class="btn secundario" type="button">Cancelar</button>
+                <button id="btnGuardar" class="btn" type="submit">Guardar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script type="module" src="js/tipos-usuario.js"></script>
+</body>
+</html>
